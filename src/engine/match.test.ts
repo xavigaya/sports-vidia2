@@ -413,3 +413,23 @@ describe('líbero automàtic per defecte', () => {
     expect(s.teams.A.libero).toEqual({ libero: 21, replaces: 15 });
   });
 });
+
+describe('accions complementàries', () => {
+  const act = (side: 'H' | 'A', player: number, skill: 'S' | 'R' | 'A' | 'B', evaluation: '#' | '=' | '/' | '+'): MatchEventData =>
+    ({ type: 'action', side, player, skill, evaluation }) as MatchEventData;
+
+  test('ace + error de recepció: un sol punt', () => {
+    const s = apply(start('H'), act('H', 1, 'S', '#'), act('A', 15, 'R', '='));
+    expect(s.score).toEqual({ H: 1, A: 0 });
+  });
+
+  test('atac bloquejat + punt de bloqueig: un sol punt', () => {
+    const s = apply(start('H'), act('H', 1, 'S', '+'), act('A', 12, 'A', '/'), act('H', 3, 'B', '#'));
+    expect(s.score).toEqual({ H: 1, A: 0 });
+  });
+
+  test('una acció del mateix equip després del punt sí que compta com a jugada nova', () => {
+    const s = apply(start('H'), act('H', 1, 'S', '#'), act('H', 1, 'S', '#'));
+    expect(s.score).toEqual({ H: 2, A: 0 });
+  });
+});

@@ -109,6 +109,9 @@ export interface MatchState {
   lastSeq: number;
   // Missatges informatius (p. ex. "el líbero surt automàticament")
   notices: string[];
+  // Acció que acaba de tancar la jugada (per acceptar-ne la complementària:
+  // S# + R=, A# + B=, A/ + B#… sense sumar el punt dues vegades)
+  closing: { winner: Side; side: Side } | null;
 }
 
 export type EngineErrorCode =
@@ -194,6 +197,7 @@ export function initialState(rules: MatchRules = DEFAULT_RULES, rosters: Rosters
     winner: null,
     rally: [],
     lastSeq: 0,
+    closing: null,
     notices: [],
   };
 }
@@ -230,6 +234,15 @@ function checkLineup(l: TeamLineup, roster: number[] | null) {
 export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
   const s = clone(prev);
   s.notices = [];
+  const closing = s.closing ?? null;
+  s.closing = null;
+
+  // Acció complementària de la que ha tancat la jugada: es registra sense nou punt
+  if (ev.type === 'action' && closing && ev.side !== closing.side && pointWinner(ev) === closing.winner) {
+    checkRoster(s.rosters?.[ev.side], ev.player);
+    s.notices.push('complement');
+    return s;
+  }
 
   if (s.phase === 'match_over') throw new EngineError('match_over');
 
@@ -294,7 +307,10 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
       delete (action as { type?: string }).type;
       s.rally.push(action);
       const winner = pointWinner(ev);
-      if (winner) awardPoint(s, winner);
+      if (winner) {
+        awardPoint(s, winner);
+        s.closing = { winner, side: ev.side };
+      }
       return s;
     }
 
