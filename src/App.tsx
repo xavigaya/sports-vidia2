@@ -8,7 +8,9 @@ import { ClubSettingsPage } from './club/ClubSettingsPage';
 import { MembersPage } from './club/MembersPage';
 import { AppShell } from './components/AppShell';
 import { ErrorBox, Spinner } from './components/ui';
-import { HomePage, MatchesPage } from './pages/HomePage';
+import { HomePage } from './pages/HomePage';
+import { MatchesPage } from './matches/MatchesPage';
+import { MatchPage } from './matches/MatchPage';
 import { PlayersPage } from './players/PlayersPage';
 import { TeamDetailPage } from './teams/TeamDetailPage';
 import { TeamsPage } from './teams/TeamsPage';
@@ -47,6 +49,7 @@ function ClubGate() {
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="matches" element={<MatchesPage />} />
+        <Route path="matches/:matchId" element={<MatchPage />} />
         <Route path="teams" element={<TeamsPage />} />
         <Route path="teams/:teamId" element={<TeamDetailPage />} />
         <Route path="players" element={<PlayersPage />} />

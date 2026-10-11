@@ -1,0 +1,500 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { useCurrentClub } from '../club/ClubProvider';
+import { playerDisplayName, type MatchPlayer, type SideCode } from '../lib/types';
+import { Modal } from '../components/ui';
+import {
+  applyEvent,
+  EngineError,
+  initialState,
+  onCourt,
+  suggestNextLineup,
+  targetPoints,
+  type MatchEvent,
+  type MatchEventData,
+  type MatchState,
+  type Side,
+} from '../engine/match';
+import { eventCode, parseCommand } from '../engine/commands';
+import { Court } from './Court';
+import { LineupForm } from './LineupForm';
+import type { UseMatch } from './useMatch';
+
+const SIDES: Side[] = ['H', 'A'];
+
+export function engineErrorText(t: TFunction, e: unknown): string {
+  if (e instanceof EngineError) return t(`engine.${e.code}`, e.params);
+  return e instanceof Error ? e.message : String(e);
+}
+
+function isTouch(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+}
+
+export function LiveScoring({ m }: { m: UseMatch }) {
+  const { t } = useTranslation();
+  const club = useCurrentClub();
+  const match = m.match!;
+  const state = m.state!;
+  const [flip, setFlip] = useState(false);
+  const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
+  const [lineupOpen, setLineupOpen] = useState(false);
+  const [subSide, setSubSide] = useState<Side | null>(null);
+  const [liberoSide, setLiberoSide] = useState<Side | null>(null);
+  const [command, setCommand] = useState('');
+  const cmdRef = useRef<HTMLInputElement>(null);
+
+  const names: Record<SideCode, string> = { H: match.home.short_name ?? match.home.name, A: match.away.short_name ?? match.away.name };
+  const colors: Record<SideCode, string> = {
+    H: match.home.color ?? (match.home.is_own ? club.primary_color : '#5b6575'),
+    A: match.away.color ?? (match.away.is_own ? club.primary_color : '#5b6575'),
+  };
+
+  const playerMaps = useMemo(() => {
+    const maps: Record<SideCode, Map<number, MatchPlayer>> = { H: new Map(), A: new Map() };
+    for (const p of m.players) maps[p.side].set(p.shirt_number, p);
+    return maps;
+  }, [m.players]);
+
+  const canCode = m.canCode;
+  const inPlay = state.phase === 'in_play';
+  const nextSet = state.currentSet + 1;
+
+  const send = useCallback(
+    async (ev: MatchEventData) => {
+      setMessage(null);
+      const r = await m.append(ev);
+      if (!r.ok) {
+        setMessage({ kind: 'error', text: engineErrorText(t, r.error) });
+        return false;
+      }
+      const auto = r.state.notices.find((n) => n.startsWith('libero_auto_out'));
+      if (auto) {
+        const [, side, libero, player] = auto.split(':');
+        setMessage({ kind: 'info', text: t('live.liberoAutoOut', { team: names[side as Side], libero, player }) });
+      }
+      if (r.state.phase === 'awaiting_lineup' && ev.type === 'point') {
+        setMessage({ kind: 'info', text: t('live.setOver', { set: r.state.currentSet, team: names[ev.side] }) });
+      }
+      return true;
+    },
+    [m, t, names],
+  );
+
+  // Obre l'alineació automàticament quan toca
+  useEffect(() => {
+    if (canCode && state.phase === 'awaiting_lineup' && m.players.length > 0) setLineupOpen(true);
+  }, [canCode, state.phase, state.currentSet, m.players.length]);
+
+  // Focus a la línia d'ordres en ordinador; Ctrl+Z desfà
+  useEffect(() => {
+    if (canCode && !isTouch()) cmdRef.current?.focus();
+  }, [canCode, state.lastSeq]);
+
+  useEffect(() => {
+    if (!canCode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' && target !== cmdRef.current) return;
+        if (target === cmdRef.current && command) return;
+        e.preventDefault();
+        void m.undo();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canCode, command, m]);
+
+  async function onCommand(e: FormEvent) {
+    e.preventDefault();
+    const r = parseCommand(command);
+    if (!r.ok) {
+      if (r.error !== 'empty') setMessage({ kind: 'error', text: t(`live.cmd.${r.error}`) });
+      return;
+    }
+    if (await send(r.event)) setCommand('');
+  }
+
+  const log = useMemo(() => buildLog(m.events, state.rules), [m.events, state.rules]);
+
+  return (
+    <div className="live">
+      {/* Marcador */}
+      <section className="scoreboard card">
+        {(flip ? (['A', 'H'] as Side[]) : SIDES).map((side, i) => (
+          <div key={side} className={`sb-team ${i === 1 ? 'right' : ''}`} style={{ ['--team' as string]: colors[side] }}>
+            <div className="sb-name">
+              {inPlay && state.serving === side && <span className="sb-serve" title={t('live.serving')} />}
+              {names[side]}
+            </div>
+            <div className="sb-sets mono">{state.setsWon[side]}</div>
+            <div className="sb-points mono">{state.currentSet > 0 ? state.score[side] : '–'}</div>
+            {inPlay && (
+              <div className="sb-counters small">
+                <span>
+                  {t('live.timeoutsShort')} {state.teams[side].timeoutsUsed}/{state.rules.timeoutsPerSet}
+                </span>
+                <span>
+                  {t('live.subsShort')} {state.teams[side].subsUsed}/{state.rules.maxSubstitutions}
+                </span>
+              </div>
+            )}
+          </div>
+        ))}
+        <div className="sb-middle">
+          <div className="sb-set">
+            {state.phase === 'match_over'
+              ? t('live.final')
+              : state.currentSet > 0
+                ? t('live.setN', { n: state.currentSet })
+                : t('live.notStarted')}
+          </div>
+          {inPlay && <div className="small muted">{t('live.to', { n: targetPoints(state) })}</div>}
+          <div className="sb-history mono small">
+            {state.sets
+              .filter((s) => s.winner)
+              .map((s) => (
+                <span key={s.number}>{flip ? `${s.away}-${s.home}` : `${s.home}-${s.away}`}</span>
+              ))}
+          </div>
+        </div>
+      </section>
+
+      {message && (
+        <div className={message.kind === 'error' ? 'error-box' : 'notice'} role="status">
+          {message.text}
+        </div>
+      )}
+      {state.phase === 'match_over' && (
+        <div className="notice final-banner">{t('live.matchWon', { team: names[state.winner!], h: state.setsWon.H, a: state.setsWon.A })}</div>
+      )}
+      {m.replayErrors.length > 0 && <div className="error-box">{t('live.replayErrors', { count: m.replayErrors.length })}</div>}
+
+      {/* Camp */}
+      {state.currentSet > 0 && (
+        <section className="courts">
+          {(flip ? (['A', 'H'] as Side[]) : SIDES).map((side, i) => (
+            <div key={side} className="court-wrap">
+              <Court
+                team={state.teams[side]}
+                players={playerMaps[side]}
+                serving={inPlay && state.serving === side}
+                netOnRight={i === 0}
+                color={colors[side]}
+              />
+            </div>
+          ))}
+          <div className="net" aria-hidden="true" />
+        </section>
+      )}
+
+      {/* Accions */}
+      {canCode && (
+        <section className="actions">
+          {(flip ? (['A', 'H'] as Side[]) : SIDES).map((side) => (
+            <div key={side} className="action-col" style={{ ['--team' as string]: colors[side] }}>
+              <button className="btn btn-point" disabled={!inPlay} onClick={() => void send({ type: 'point', side })}>
+                {t('live.point')} {names[side]}
+              </button>
+              <div className="action-row">
+                <button className="btn" disabled={!inPlay} onClick={() => void send({ type: 'timeout', side })}>
+                  {t('live.timeout')}
+                </button>
+                <button className="btn" disabled={!inPlay} onClick={() => setSubSide(side)}>
+                  {t('live.sub')}
+                </button>
+                <button className="btn" disabled={!inPlay || state.teams[side].liberos.length === 0} onClick={() => setLiberoSide(side)}>
+                  {t('positions.L')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {canCode && (
+        <section className="command-bar card">
+          <form onSubmit={onCommand} className="row">
+            <input
+              ref={cmdRef}
+              className="mono cmd-input"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setCommand('')}
+              placeholder={t('live.cmdPlaceholder')}
+              aria-label={t('live.cmdLabel')}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+            <button className="btn">↵</button>
+          </form>
+          <div className="row wrap toolbar">
+            {state.phase === 'awaiting_lineup' && (
+              <button className="btn btn-primary" onClick={() => setLineupOpen(true)} disabled={m.players.length === 0}>
+                {t('live.lineupForSet', { n: nextSet })}
+              </button>
+            )}
+            <button className="btn" onClick={() => void m.undo()} disabled={m.events.length === 0} title="Ctrl+Z">
+              ↶ {t('live.undo')}
+            </button>
+            <button className="btn" onClick={() => setFlip((f) => !f)}>
+              ⇄ {t('live.swapSides')}
+            </button>
+            <details className="cmd-help">
+              <summary>{t('live.cmdHelpTitle')}</summary>
+              <ul className="small">
+                <li>
+                  <code>*p</code> / <code>ap</code> — {t('live.cmdHelp.point')}
+                </li>
+                <li>
+                  <code>*T</code> / <code>aT</code> — {t('live.cmdHelp.timeout')}
+                </li>
+                <li>
+                  <code>*c3:13</code> — {t('live.cmdHelp.sub')}
+                </li>
+                <li>
+                  <code>*l10:5</code> — {t('live.cmdHelp.libero')}
+                </li>
+                <li>
+                  <kbd>Ctrl</kbd>+<kbd>Z</kbd> — {t('live.cmdHelp.undo')}
+                </li>
+              </ul>
+            </details>
+          </div>
+        </section>
+      )}
+
+      {/* Registre */}
+      <section className="card event-log">
+        <h2>{t('live.log')}</h2>
+        {log.length === 0 ? (
+          <p className="muted">{t('live.logEmpty')}</p>
+        ) : (
+          <ol reversed>
+            {log
+              .slice()
+              .reverse()
+              .slice(0, 60)
+              .map((row) => (
+                <li key={row.ev.seq} className={`log-${row.ev.type}`}>
+                  <span className="mono log-score">
+                    {row.set > 0 && `S${row.set} `}
+                    {row.h}-{row.a}
+                  </span>
+                  <span className="mono log-code">{eventCode(row.ev)}</span>
+                  <span>{describe(t, row.ev, names, playerMaps)}</span>
+                </li>
+              ))}
+          </ol>
+        )}
+      </section>
+
+      <Modal title={t('live.lineupForSet', { n: nextSet })} open={lineupOpen && state.phase === 'awaiting_lineup'} onClose={() => setLineupOpen(false)}>
+        <LineupForm
+          setNumber={nextSet}
+          isTiebreak={nextSet === state.rules.setsToWin * 2 - 1}
+          players={m.players}
+          teamNames={{ H: match.home.name, A: match.away.name }}
+          initial={suggestNextLineup(state)}
+          onCancel={() => setLineupOpen(false)}
+          onSubmit={async (v) => {
+            const r = await m.append({ type: 'lineup', ...v });
+            if (!r.ok) return engineErrorText(t, r.error);
+            setLineupOpen(false);
+            setMessage(null);
+            return null;
+          }}
+        />
+      </Modal>
+
+      <Modal title={subSide ? `${t('live.sub')} · ${names[subSide]}` : ''} open={subSide !== null} onClose={() => setSubSide(null)}>
+        {subSide && (
+          <SubForm
+            state={state}
+            side={subSide}
+            players={playerMaps[subSide]}
+            onDone={async (out, inn) => {
+              if (await send({ type: 'sub', side: subSide, out, in: inn })) setSubSide(null);
+            }}
+          />
+        )}
+      </Modal>
+
+      <Modal title={liberoSide ? `${t('positions.L')} · ${names[liberoSide]}` : ''} open={liberoSide !== null} onClose={() => setLiberoSide(null)}>
+        {liberoSide && (
+          <LiberoForm
+            state={state}
+            side={liberoSide}
+            onDone={async (libero, player) => {
+              if (await send({ type: 'libero', side: liberoSide, libero, player })) setLiberoSide(null);
+            }}
+          />
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// Canvis: només s'ofereixen les combinacions reglamentàries
+// ---------------------------------------------------------------------
+function isValid(state: MatchState, ev: MatchEventData): boolean {
+  try {
+    applyEvent(state, ev);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function label(n: number, players: Map<number, MatchPlayer>) {
+  const p = players.get(n);
+  return (
+    <>
+      <span className="mono pick-num">{n}</span>
+      <span className="pick-name">{p ? playerDisplayName(p.players) : ''}</span>
+    </>
+  );
+}
+
+function SubForm({
+  state,
+  side,
+  players,
+  onDone,
+}: {
+  state: MatchState;
+  side: Side;
+  players: Map<number, MatchPlayer>;
+  onDone: (out: number, inn: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [out, setOut] = useState<number | null>(null);
+  const team = state.teams[side];
+  const bench = [...players.keys()].filter((n) => !team.lineup.includes(n) && !team.liberos.includes(n)).sort((a, b) => a - b);
+  const candidates = out === null ? [] : bench.filter((n) => isValid(state, { type: 'sub', side, out, in: n }));
+
+  return (
+    <div className="stack">
+      <p className="muted small">
+        {t('live.subsUsed', { used: team.subsUsed, max: state.rules.maxSubstitutions })}
+      </p>
+      <h3>{t('live.subOut')}</h3>
+      <div className="pick-grid">
+        {team.lineup.map((n) => {
+          const possible = bench.some((b) => isValid(state, { type: 'sub', side, out: n, in: b }));
+          return (
+            <button key={n} type="button" className={`pick ${out === n ? 'on' : ''}`} disabled={!possible} onClick={() => setOut(n)}>
+              {label(n, players)}
+            </button>
+          );
+        })}
+      </div>
+      {out !== null && (
+        <>
+          <h3>{t('live.subIn')}</h3>
+          {candidates.length === 0 ? (
+            <p className="muted">{t('live.noCandidates')}</p>
+          ) : (
+            <div className="pick-grid">
+              {candidates.map((n) => (
+                <button key={n} type="button" className="pick" onClick={() => onDone(out, n)}>
+                  {label(n, players)}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function LiberoForm({
+  state,
+  side,
+  onDone,
+}: {
+  state: MatchState;
+  side: Side;
+  onDone: (libero: number, player: number) => void;
+}) {
+  const { t } = useTranslation();
+  const team = state.teams[side];
+  const options: { libero: number; player: number; kind: 'in' | 'out' | 'swap' }[] = [];
+  for (const l of team.liberos) {
+    for (const p of [...team.lineup, ...team.liberos]) {
+      if (p === l) continue;
+      if (!isValid(state, { type: 'libero', side, libero: l, player: p })) continue;
+      const kind = team.libero?.libero === l ? 'out' : team.libero?.libero === p ? 'swap' : 'in';
+      options.push({ libero: l, player: p, kind });
+    }
+  }
+  const court = onCourt(team);
+
+  return (
+    <div className="stack">
+      {options.length === 0 ? (
+        <p className="muted">{t('live.noLiberoOptions')}</p>
+      ) : (
+        <div className="pick-grid wide">
+          {options.map((o) => (
+            <button key={`${o.libero}-${o.player}`} type="button" className="pick" onClick={() => onDone(o.libero, o.player)}>
+              <span className="mono pick-num">{o.libero}</span>
+              <span className="pick-name">
+                {o.kind === 'in' && t('live.liberoIn', { player: o.player, pos: ['I', 'II', 'III', 'IV', 'V', 'VI'][court.indexOf(o.player)] })}
+                {o.kind === 'out' && t('live.liberoOut', { player: o.player })}
+                {o.kind === 'swap' && t('live.liberoSwap', { player: o.player })}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="small muted">{t('live.liberoRules')}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// Registre d'esdeveniments amb el marcador després de cadascun
+// ---------------------------------------------------------------------
+function buildLog(events: MatchEvent[], rules: MatchState['rules']) {
+  let s = initialState(rules);
+  const rows: { ev: MatchEvent; set: number; h: number; a: number }[] = [];
+  for (const ev of events) {
+    try {
+      s = applyEvent(s, ev);
+    } catch {
+      /* esdeveniment invàlid: es mostra igualment */
+    }
+    rows.push({ ev, set: s.currentSet, h: s.score.H, a: s.score.A });
+  }
+  return rows;
+}
+
+function describe(
+  t: TFunction,
+  ev: MatchEvent,
+  names: Record<SideCode, string>,
+  maps: Record<SideCode, Map<number, MatchPlayer>>,
+): string {
+  const who = (side: Side, n: number) => {
+    const p = maps[side].get(n);
+    return p ? `${n} ${playerDisplayName(p.players)}` : String(n);
+  };
+  switch (ev.type) {
+    case 'lineup':
+      return t('live.desc.lineup', { set: ev.set, team: names[ev.serving] });
+    case 'point':
+      return t('live.desc.point', { team: names[ev.side] });
+    case 'timeout':
+      return t('live.desc.timeout', { team: names[ev.side] });
+    case 'sub':
+      return t('live.desc.sub', { team: names[ev.side], out: who(ev.side, ev.out), in: who(ev.side, ev.in) });
+    case 'libero':
+      return t('live.desc.libero', { team: names[ev.side], libero: who(ev.side, ev.libero), player: who(ev.side, ev.player) });
+  }
+}

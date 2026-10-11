@@ -2,13 +2,14 @@
   "name": "sports-vidia2",
   "private": true,
   "version": "0.1.0",
-  "description": "Sports VidIA 2 — estadístiques de voleibol amb vídeo, compatible amb DataVolley",
+  "description": "Sports VidIA 2 \u2014 estad\u00edstiques de voleibol amb v\u00eddeo, compatible amb DataVolley",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^3.2.0"
   }
 }

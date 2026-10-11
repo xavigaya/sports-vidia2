@@ -93,3 +93,62 @@ export function playerDisplayName(p: Pick<Player, 'first_name' | 'last_name' | '
   if (p.nickname) return p.nickname;
   return [p.first_name, p.last_name].filter(Boolean).join(' ');
 }
+
+// ---------------------------------------------------------------------
+// Partits (fase 2)
+// ---------------------------------------------------------------------
+export type MatchStatus = 'scheduled' | 'live' | 'finished';
+export type SideCode = 'H' | 'A';
+
+export interface Match {
+  id: string;
+  club_id: string;
+  season_id: string | null;
+  home_team_id: string;
+  away_team_id: string;
+  played_at: string | null;
+  competition: string | null;
+  phase: string | null;
+  venue: string | null;
+  status: MatchStatus;
+  sets_to_win: number;
+  points_per_set: number;
+  tiebreak_points: number;
+  max_substitutions: number;
+  timeouts_per_set: number;
+  home_sets: number;
+  away_sets: number;
+  set_scores: { h: number; a: number }[];
+  coder_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type MatchWithTeams = Match & {
+  home: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'>;
+  away: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'>;
+};
+
+export interface MatchPlayer {
+  match_id: string;
+  club_id: string;
+  side: SideCode;
+  player_id: string;
+  shirt_number: number;
+  position: PlayerPosition;
+  is_libero: boolean;
+  is_captain: boolean;
+  players: Pick<Player, 'id' | 'first_name' | 'last_name' | 'nickname'>;
+}
+
+export interface MatchEventRow {
+  match_id: string;
+  club_id: string;
+  seq: number;
+  set_number: number;
+  type: 'lineup' | 'point' | 'sub' | 'libero' | 'timeout';
+  data: Record<string, unknown>;
+  video_time: number | null;
+  created_at: string;
+}

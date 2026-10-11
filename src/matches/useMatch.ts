@@ -1,0 +1,199 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../auth/AuthProvider';
+import { useClub } from '../club/ClubProvider';
+import type { MatchEventRow, MatchPlayer, MatchWithTeams } from '../lib/types';
+import {
+  applyEvent,
+  EngineError,
+  replay,
+  type MatchEvent,
+  type MatchEventData,
+  type MatchRules,
+  type MatchState,
+} from '../engine/match';
+
+export const MATCH_SELECT =
+  '*, home:teams!matches_home_team_id_fkey(id, name, short_name, code, color, is_own), away:teams!matches_away_team_id_fkey(id, name, short_name, code, color, is_own)';
+
+export function rulesOf(m: Pick<MatchWithTeams, 'sets_to_win' | 'points_per_set' | 'tiebreak_points' | 'max_substitutions' | 'timeouts_per_set'>): MatchRules {
+  return {
+    setsToWin: m.sets_to_win,
+    pointsPerSet: m.points_per_set,
+    tiebreakPoints: m.tiebreak_points,
+    maxSubstitutions: m.max_substitutions,
+    timeoutsPerSet: m.timeouts_per_set,
+  };
+}
+
+export function rowToEvent(r: Pick<MatchEventRow, 'seq' | 'set_number' | 'type' | 'data' | 'video_time'>): MatchEvent {
+  return { ...(r.data as object), type: r.type, seq: r.seq, set: r.set_number, videoTime: r.video_time } as MatchEvent;
+}
+
+function eventToData(ev: MatchEventData): Record<string, unknown> {
+  const rest: Record<string, unknown> = { ...ev };
+  delete rest.type;
+  return rest;
+}
+
+export type AppendResult = { ok: true; state: MatchState } | { ok: false; error: EngineError | Error };
+
+export function useMatch(matchId: string) {
+  const { user } = useAuth();
+  const { isAdmin, canEdit } = useClub();
+  const [match, setMatch] = useState<MatchWithTeams | null>(null);
+  const [players, setPlayers] = useState<MatchPlayer[]>([]);
+  const [events, setEvents] = useState<MatchEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const busy = useRef(false);
+
+  const loadMatch = useCallback(async () => {
+    const { data, error } = await supabase.from('matches').select(MATCH_SELECT).eq('id', matchId).single();
+    if (error) setError(error.message);
+    else setMatch(data as unknown as MatchWithTeams);
+  }, [matchId]);
+
+  const loadPlayers = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('match_players')
+      .select('*, players(id, first_name, last_name, nickname)')
+      .eq('match_id', matchId)
+      .order('shirt_number');
+    if (error) setError(error.message);
+    else setPlayers((data ?? []) as MatchPlayer[]);
+  }, [matchId]);
+
+  const loadEvents = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('match_events')
+      .select('seq, set_number, type, data, video_time')
+      .eq('match_id', matchId)
+      .order('seq');
+    if (error) setError(error.message);
+    else setEvents((data ?? []).map((r) => rowToEvent(r as MatchEventRow)));
+  }, [matchId]);
+
+  useEffect(() => {
+    setLoading(true);
+    void Promise.all([loadMatch(), loadPlayers(), loadEvents()]).then(() => setLoading(false));
+  }, [loadMatch, loadPlayers, loadEvents]);
+
+  // Seguiment en directe: qualsevol canvi als esdeveniments d'aquest partit
+  useEffect(() => {
+    const channel = supabase
+      .channel(`match-${matchId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'match_events', filter: `match_id=eq.${matchId}` }, () => {
+        if (!busy.current) void loadEvents();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'match_events' }, (payload) => {
+        const old = payload.old as Partial<MatchEventRow>;
+        if (old.match_id === matchId && !busy.current) void loadEvents();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [matchId, loadEvents]);
+
+  const rules = useMemo(() => (match ? rulesOf(match) : null), [match]);
+  const replayed = useMemo(() => (rules ? replay(events, rules) : null), [events, rules]);
+  const state = replayed?.state ?? null;
+
+  const isCoder = !!match && !!user && match.coder_id === user.id;
+  const canCode = !!match && canEdit && (isCoder || isAdmin);
+
+  const syncSummary = useCallback(
+    async (s: MatchState) => {
+      if (!match) return;
+      const summary = {
+        home_sets: s.setsWon.H,
+        away_sets: s.setsWon.A,
+        set_scores: s.sets.map((x) => ({ h: x.home, a: x.away })),
+        status: s.phase === 'match_over' ? 'finished' : s.currentSet > 0 ? 'live' : 'scheduled',
+      };
+      await supabase.from('matches').update(summary).eq('id', match.id);
+      setMatch((m) => (m ? { ...m, ...summary } as MatchWithTeams : m));
+    },
+    [match],
+  );
+
+  // Valida l'esdeveniment amb el motor i, si és correcte, el desa
+  const append = useCallback(
+    async (ev: MatchEventData, videoTime: number | null = null): Promise<AppendResult> => {
+      if (!state || !match) return { ok: false, error: new Error('not_loaded') };
+      let next: MatchState;
+      try {
+        next = applyEvent(state, ev);
+      } catch (e) {
+        return { ok: false, error: e as Error };
+      }
+      const seq = state.lastSeq + 1;
+      const set = ev.type === 'lineup' ? state.currentSet + 1 : state.currentSet;
+      const newEvent = { ...ev, seq, set, videoTime } as MatchEvent;
+      next.lastSeq = seq;
+      busy.current = true;
+      setEvents((list) => [...list, newEvent]); // optimista
+      const { error } = await supabase.from('match_events').insert({
+        match_id: match.id,
+        club_id: match.club_id,
+        seq,
+        set_number: set,
+        type: ev.type,
+        data: eventToData(ev),
+        video_time: videoTime,
+        created_by: user?.id,
+      });
+      busy.current = false;
+      if (error) {
+        setEvents((list) => list.filter((e) => e.seq !== seq));
+        return { ok: false, error: new Error(error.message) };
+      }
+      if (ev.type === 'point' || ev.type === 'lineup') void syncSummary(next);
+      return { ok: true, state: next };
+    },
+    [state, match, user, syncSummary],
+  );
+
+  const undo = useCallback(async () => {
+    if (!match || events.length === 0) return;
+    const last = events[events.length - 1];
+    busy.current = true;
+    const { error } = await supabase.from('match_events').delete().eq('match_id', match.id).eq('seq', last.seq);
+    busy.current = false;
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    const remaining = events.slice(0, -1);
+    setEvents(remaining);
+    if (rules) void syncSummary(replay(remaining, rules).state);
+  }, [match, events, rules, syncSummary]);
+
+  const claim = useCallback(async () => {
+    if (!match) return;
+    const { error } = await supabase.rpc('claim_match', { p_match: match.id });
+    if (error) setError(error.message);
+    await loadMatch();
+  }, [match, loadMatch]);
+
+  return {
+    match,
+    players,
+    events,
+    state,
+    replayErrors: replayed?.errors ?? [],
+    loading,
+    error,
+    setError,
+    canCode,
+    isCoder,
+    append,
+    undo,
+    claim,
+    reloadMatch: loadMatch,
+    reloadPlayers: loadPlayers,
+  };
+}
+
+export type UseMatch = ReturnType<typeof useMatch>;

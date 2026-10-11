@@ -1,0 +1,101 @@
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
+import { ErrorBox, Spinner } from '../components/ui';
+import { useMatch } from './useMatch';
+import { useClub } from '../club/ClubProvider';
+import { LiveScoring } from './LiveScoring';
+import { RosterEditor } from './RosterEditor';
+
+type Tab = 'live' | 'roster';
+
+export function MatchPage() {
+  const { matchId } = useParams<{ matchId: string }>();
+  const m = useMatch(matchId!);
+  const { canEdit } = useClub();
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = params.get('tab') === 'roster' ? 'roster' : 'live';
+
+  if (m.loading) return <Spinner />;
+  if (!m.match || !m.state) return <ErrorBox message={m.error ?? '404'} />;
+  const match = m.match;
+
+  async function onDelete() {
+    if (!window.confirm(t('common.confirmDelete'))) return;
+    const { error } = await supabase.from('matches').delete().eq('id', match.id);
+    if (error) m.setError(error.message);
+    else navigate('/matches');
+  }
+
+  const date = match.played_at
+    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'full', timeStyle: 'short' }).format(new Date(match.played_at))
+    : null;
+
+  return (
+    <div className="page page-wide">
+      <Link to="/matches" className="back-link">
+        ← {t('matches.title')}
+      </Link>
+      <header className="match-header">
+        <div>
+          <h1>
+            {match.home.name} <span className="muted">–</span> {match.away.name}
+          </h1>
+          <div className="muted small">{[date, match.competition, match.phase, match.venue].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div className="row wrap">
+          {!m.canCode && (
+            <span className="badge">{match.coder_id ? t('matches.readOnly') : t('matches.noCoder')}</span>
+          )}
+          {canEdit && !m.canCode && !match.coder_id && (
+            <button className="btn btn-sm" onClick={() => void m.claim()}>
+              {t('matches.claim')}
+            </button>
+          )}
+          {m.canCode && !m.isCoder && (
+            <button className="btn btn-sm" onClick={() => void m.claim()} title={t('matches.takeOverHelp')}>
+              {t('matches.takeOver')}
+            </button>
+          )}
+          {m.canCode && (
+            <button className="btn btn-sm btn-danger" onClick={() => void onDelete()}>
+              {t('common.delete')}
+            </button>
+          )}
+        </div>
+      </header>
+
+      <div className="segmented tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'live'} className={tab === 'live' ? 'on' : ''} onClick={() => setParams({})}>
+          {t('matches.tabLive')}
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'roster'}
+          className={tab === 'roster' ? 'on' : ''}
+          onClick={() => setParams({ tab: 'roster' })}
+        >
+          {t('matches.tabRoster')} <span className="muted">({m.players.length})</span>
+        </button>
+      </div>
+
+      {m.error && <ErrorBox message={m.error} />}
+      {tab === 'live' ? (
+        m.players.length === 0 && m.events.length === 0 ? (
+          <div className="card stack">
+            <p>{t('matches.needRoster')}</p>
+            <button className="btn btn-primary" onClick={() => setParams({ tab: 'roster' })}>
+              {t('matches.tabRoster')}
+            </button>
+          </div>
+        ) : (
+          <LiveScoring m={m} />
+        )
+      ) : (
+        <RosterEditor m={m} />
+      )}
+    </div>
+  );
+}

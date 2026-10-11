@@ -43,12 +43,3 @@ export function HomePage() {
     </div>
   );
 }
-
-export function MatchesPage() {
-  const { t } = useTranslation();
-  return (
-    <div className="page">
-      <div className="card empty">{t('matches.comingSoon')}</div>
-    </div>
-  );
-}
