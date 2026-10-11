@@ -13,7 +13,8 @@ import {
   type MatchEventData,
   type MatchState,
 } from './match';
-import { eventCode, parseCommand } from './commands';
+import { eventCode, parseCommand, resolveAction, type PartialAction } from './commands';
+import { pointWinner, zoneAt, actionCode } from './actions';
 
 const H = { positions: [1, 2, 3, 4, 5, 6], liberos: [10] };
 const A = { positions: [11, 12, 13, 14, 15, 16], liberos: [20, 21] };
@@ -233,24 +234,182 @@ describe('reproducció i propostes', () => {
 });
 
 describe('línia d’ordres', () => {
-  test('codis bàsics', () => {
-    expect(parseCommand('*p')).toEqual({ ok: true, event: { type: 'point', side: 'H' } });
-    expect(parseCommand('AP')).toEqual({ ok: true, event: { type: 'point', side: 'A' } });
-    expect(parseCommand('aT')).toEqual({ ok: true, event: { type: 'timeout', side: 'A' } });
-    expect(parseCommand('*c3:13')).toEqual({ ok: true, event: { type: 'sub', side: 'H', out: 3, in: 13 } });
-    expect(parseCommand('a c 4.12')).toEqual({ ok: true, event: { type: 'sub', side: 'A', out: 4, in: 12 } });
-    expect(parseCommand('*l10:5')).toEqual({ ok: true, event: { type: 'libero', side: 'H', libero: 10, player: 5 } });
+  const one = (input: string) => {
+    const r = parseCommand(input);
+    if (!r.ok) throw new Error(r.error);
+    return r.events[0];
+  };
+
+  test('codis de marcador', () => {
+    expect(one('*p')).toEqual({ type: 'point', side: 'H' });
+    expect(one('AP')).toEqual({ type: 'point', side: 'A' });
+    expect(one('aT')).toEqual({ type: 'timeout', side: 'A' });
+    expect(one('*c3:13')).toEqual({ type: 'sub', side: 'H', out: 3, in: 13 });
+    expect(one('ac4.12')).toEqual({ type: 'sub', side: 'A', out: 4, in: 12 });
+    expect(one('*l10:5')).toEqual({ type: 'libero', side: 'H', libero: 10, player: 5 });
+  });
+
+  test('accions de joc', () => {
+    expect(one('*12SH#16')).toEqual({
+      type: 'partial_action', side: 'H', player: 12, skill: 'S', skillType: 'H', evaluation: '#', startZone: 1, endZone: 6,
+    });
+    expect(one('a7r+')).toMatchObject({ side: 'A', player: 7, skill: 'R', evaluation: '+', skillType: null });
+    expect(one('4A=')).toMatchObject({ side: null, player: 4, skill: 'A', evaluation: '=' });
+    expect(one('S/')).toMatchObject({ side: null, player: null, skill: 'S', evaluation: '/' });
+    expect(one('a11E!~5')).toMatchObject({ side: 'A', player: 11, skill: 'E', startZone: null, endZone: 5 });
+  });
+
+  test('diversos codis en una línia', () => {
+    const r = parseCommand('S+ 13R- a12A#');
+    expect(r.ok && r.events.length).toBe(3);
   });
 
   test('errors', () => {
-    expect(parseCommand('')).toEqual({ ok: false, error: 'empty' });
-    expect(parseCommand('x p')).toEqual({ ok: false, error: 'side' });
-    expect(parseCommand('*q')).toEqual({ ok: false, error: 'syntax' });
-    expect(parseCommand('*c3')).toEqual({ ok: false, error: 'syntax' });
+    expect(parseCommand('')).toMatchObject({ ok: false, error: 'empty' });
+    expect(parseCommand('xp')).toMatchObject({ ok: false, error: 'side' });
+    expect(parseCommand('*q')).toMatchObject({ ok: false, error: 'syntax' });
+    expect(parseCommand('*c3')).toMatchObject({ ok: false, error: 'syntax' });
+    expect(parseCommand('A#')).toMatchObject({ ok: false, error: 'player_required' });
+    expect(parseCommand('*p 5X+')).toMatchObject({ ok: false, error: 'syntax', token: '5X+' });
+  });
+
+  test('completa equip i dorsal amb l’estat', () => {
+    const s = start('A');
+    expect(resolveAction(s, one('S#') as PartialAction)).toMatchObject({ side: 'A', player: 11 });
+    expect(resolveAction(s, one('3R+') as PartialAction)).toMatchObject({ side: 'H', player: 3 });
+    expect(resolveAction(s, one('5A+') as PartialAction)).toMatchObject({ side: 'H' });
   });
 
   test('codi d’esdeveniment', () => {
     expect(eventCode({ type: 'sub', side: 'A', out: 3, in: 13 })).toBe('ac03:13');
     expect(eventCode({ type: 'point', side: 'H' })).toBe('*p');
+    expect(actionCode({ side: 'A', player: 7, skill: 'A', skillType: 'Q', evaluation: '#', startZone: 3, endZone: 5 })).toBe('a07AQ#35');
+  });
+});
+
+describe('accions de joc', () => {
+  const act = (side: 'H' | 'A', player: number, skill: 'S' | 'R' | 'E' | 'A' | 'B' | 'D' | 'F', evaluation: '#' | '+' | '!' | '-' | '/' | '='): MatchEventData => ({
+    type: 'action', side, player, skill, evaluation,
+  });
+
+  test('qui guanya el punt', () => {
+    expect(pointWinner({ side: 'H', skill: 'S', evaluation: '#' })).toBe('H');
+    expect(pointWinner({ side: 'H', skill: 'S', evaluation: '=' })).toBe('A');
+    expect(pointWinner({ side: 'A', skill: 'A', evaluation: '#' })).toBe('A');
+    expect(pointWinner({ side: 'A', skill: 'A', evaluation: '/' })).toBe('H');
+    expect(pointWinner({ side: 'H', skill: 'B', evaluation: '#' })).toBe('H');
+    expect(pointWinner({ side: 'H', skill: 'R', evaluation: '=' })).toBe('A');
+    expect(pointWinner({ side: 'H', skill: 'R', evaluation: '#' })).toBeNull();
+    expect(pointWinner({ side: 'H', skill: 'D', evaluation: '+' })).toBeNull();
+  });
+
+  test('una jugada completa suma el punt', () => {
+    let s = start('H');
+    s = apply(s, act('H', 1, 'S', '+'), act('A', 15, 'R', '-'), act('A', 13, 'E', '+'), act('A', 14, 'A', '#'));
+    expect(s.score).toEqual({ H: 0, A: 1 });
+    expect(s.serving).toBe('A');
+    expect(s.rally).toEqual([]);
+  });
+
+  test('ace i error de servei', () => {
+    let s = apply(start('H'), act('H', 1, 'S', '#'));
+    expect(s.score).toEqual({ H: 1, A: 0 });
+    s = apply(s, act('H', 1, 'S', '='));
+    expect(s.score).toEqual({ H: 1, A: 1 });
+  });
+
+  test('validacions', () => {
+    const s = start('H');
+    expectError(() => apply(s, act('H', 2, 'S', '+')), 'not_server');
+    expectError(() => apply(s, act('A', 11, 'S', '+')), 'not_serving_team');
+    expectError(() => apply(s, act('H', 1, 'R', '+')), 'not_receiving_team');
+    expectError(() => apply(s, act('A', 99, 'D', '+')), 'player_not_on_court');
+  });
+
+  test('el líbero pot fer accions', () => {
+    const s = apply(start('A'), { type: 'libero', side: 'H', libero: 10, player: 6 }, act('H', 10, 'R', '#'));
+    expect(s.rally).toHaveLength(1);
+  });
+});
+
+describe('zones', () => {
+  test('mig camp local (esquerra)', () => {
+    expect(zoneAt({ x: 1, y: 8 })).toEqual({ half: 'H', zone: 1 });
+    expect(zoneAt({ x: 8, y: 1 })).toEqual({ half: 'H', zone: 4 });
+    expect(zoneAt({ x: 4, y: 4.5 })).toEqual({ half: 'H', zone: 8 });
+  });
+  test('mig camp visitant (dreta), mirall', () => {
+    expect(zoneAt({ x: 17, y: 1 })).toEqual({ half: 'A', zone: 1 });
+    expect(zoneAt({ x: 10, y: 8 })).toEqual({ half: 'A', zone: 4 });
+    expect(zoneAt({ x: 16, y: 4.5 })).toEqual({ half: 'A', zone: 6 });
+  });
+  test('fora del camp', () => {
+    expect(zoneAt({ x: -1, y: 4 })).toBeNull();
+  });
+});
+
+describe('líbero automàtic', () => {
+  // Centrals: 3 i 6 (local). El 6 és a la posició VI.
+  const HA = { ...H, autoLibero: true, middles: [3, 6] };
+
+  test('a l’inici del set entra pel central de la zaga', () => {
+    const s = applyEvent(initialState(), { type: 'lineup', home: HA, away: A, serving: 'A' });
+    expect(s.teams.H.libero).toEqual({ libero: 10, replaces: 6 });
+    expect(s.notices[0]).toBe('libero_auto_in:H:10:6');
+  });
+
+  test('entra quan el central acaba de servir i l’equip perd el servei', () => {
+    // El 3 és a la posició II i el 6 a la IV (tots dos a la davantera)
+    const lineup = { ...HA, positions: [4, 3, 5, 6, 1, 2], middles: [3, 6] };
+    let s = applyEvent(initialState(), { type: 'lineup', home: lineup, away: A, serving: 'A' });
+    expect(s.teams.H.libero).toBeNull();
+    s = apply(s, pt('H')); // H recupera el servei i rota: el 3 passa a la I i serveix
+    expect(onCourt(s.teams.H)[0]).toBe(3);
+    s = apply(s, pt('H')); // continua servint
+    expect(s.teams.H.libero).toBeNull();
+    s = apply(s, pt('A')); // H perd el servei: entra el líbero pel 3
+    expect(s.teams.H.libero).toEqual({ libero: 10, replaces: 3 });
+    expect(s.notices).toContain('libero_auto_in:H:10:3');
+  });
+
+  test('sense l’opció activada no entra', () => {
+    let s = applyEvent(initialState(), { type: 'lineup', home: { ...H, middles: [1] }, away: A, serving: 'H' });
+    s = apply(s, pt('A'));
+    expect(s.teams.H.libero).toBeNull();
+  });
+});
+
+describe('convocatòria', () => {
+  const rosters = { H: [1, 2, 3, 4, 5, 6, 7, 10], A: [11, 12, 13, 14, 15, 16, 20, 21] };
+
+  test('no es pot alinear un jugador no convocat', () => {
+    const s = initialState(DEFAULT_RULES, rosters);
+    expectError(
+      () => applyEvent(s, { type: 'lineup', home: { positions: [1, 2, 3, 4, 5, 9], liberos: [] }, away: A, serving: 'H' }),
+      'not_in_roster',
+    );
+  });
+
+  test('no pot entrar per canvi un jugador no convocat', () => {
+    const s = applyEvent(initialState(DEFAULT_RULES, rosters), { type: 'lineup', home: H, away: A, serving: 'H' });
+    expectError(() => applyEvent(s, { type: 'sub', side: 'H', out: 3, in: 13 }), 'not_in_roster');
+    expect(applyEvent(s, { type: 'sub', side: 'H', out: 3, in: 7 }).teams.H.lineup).toContain(7);
+  });
+
+  test('replay rep les convocatòries', () => {
+    const evs: MatchEvent[] = [
+      { seq: 1, set: 1, type: 'lineup', home: H, away: A, serving: 'H' },
+      { seq: 2, set: 1, type: 'sub', side: 'A', out: 11, in: 2 },
+    ];
+    expect(replay(evs, DEFAULT_RULES, rosters).errors.map((e) => e.error.code)).toEqual(['not_in_roster']);
+  });
+});
+
+describe('líbero automàtic per defecte', () => {
+  test('entra el líbero triat per defecte', () => {
+    const away = { ...A, autoLibero: true, middles: [15, 12], defaultLibero: 21 };
+    // A rep: el central 15 és a la posició V → entra el líbero 21
+    const s = applyEvent(initialState(), { type: 'lineup', home: H, away, serving: 'H' });
+    expect(s.teams.A.libero).toEqual({ libero: 21, replaces: 15 });
   });
 });

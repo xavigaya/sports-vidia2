@@ -6,6 +6,9 @@ import { useClub, useCurrentClub } from '../club/ClubProvider';
 import type { Season, Team } from '../lib/types';
 import { ColorSwatch, EmptyState, ErrorBox, Modal, PageHeader, Spinner } from '../components/ui';
 import { TeamForm } from './TeamForm';
+import { CsvImport } from './CsvImport';
+import { exportTeamsCsv } from './importTeams';
+import { downloadText, safeFilename } from '../lib/csv';
 
 type TeamWithCount = Team & { team_players: { count: number }[] };
 
@@ -20,6 +23,7 @@ export function TeamsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState<null | { own: boolean }>(null);
+  const [importing, setImporting] = useState(false);
 
   const loadSeasons = useCallback(async () => {
     const { data } = await supabase.from('seasons').select('*').eq('club_id', club.id).order('name', { ascending: false });
@@ -108,6 +112,20 @@ export function TeamsPage() {
               <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
               {t('teams.showArchived')}
             </label>
+            {canEdit && (
+              <button className="btn" onClick={() => setImporting(true)}>
+                ⤓ {t('csv.importBtn')}
+              </button>
+            )}
+            <button
+              className="btn"
+              disabled={visible.length === 0}
+              onClick={async () =>
+                downloadText(`${safeFilename(club.short_name ?? club.name)}_equips.csv`, await exportTeamsCsv(club.id, visible.map((x) => x.id)))
+              }
+            >
+              ⤒ {t('csv.exportBtn')}
+            </button>
           </div>
         }
       />
@@ -128,6 +146,18 @@ export function TeamsPage() {
           )}
         </>
       )}
+
+      <Modal title={t('csv.importTitleAll')} open={importing} onClose={() => setImporting(false)}>
+        <CsvImport
+          clubId={club.id}
+          targetTeam={null}
+          seasons={seasons}
+          onDone={() => {
+            setImporting(false);
+            void load();
+          }}
+        />
+      </Modal>
 
       <Modal title={t('teams.new')} open={creating !== null} onClose={() => setCreating(null)}>
         <TeamForm

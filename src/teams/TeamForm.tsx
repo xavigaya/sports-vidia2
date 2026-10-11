@@ -41,7 +41,9 @@ export function TeamForm({ clubId, team, seasons, defaultOwn = true, onSaved, on
     setDraft((d) => ({ ...d, [key]: value }));
   }
 
-  const text = (v: string) => (v.trim() === '' ? null : v.trim());
+  // No es retallen els espais mentre s'escriu (si no, no es podrien escriure noms compostos)
+  const text = (v: string) => (v === '' ? null : v);
+  const clean = (v: string | null) => (v && v.trim() !== '' ? v.trim() : null);
 
   async function onNewSeason() {
     const name = window.prompt(t('teams.newSeason'), suggestSeasonName());
@@ -66,7 +68,11 @@ export function TeamForm({ clubId, team, seasons, defaultOwn = true, onSaved, on
     const payload = {
       ...draft,
       name: draft.name.trim(),
-      code: draft.code ? draft.code.toUpperCase() : null,
+      short_name: clean(draft.short_name),
+      code: clean(draft.code)?.toUpperCase() ?? null,
+      category: clean(draft.category),
+      coach: clean(draft.coach),
+      assistant: clean(draft.assistant),
     };
     const query = team
       ? supabase.from('teams').update(payload).eq('id', team.id).select().single()

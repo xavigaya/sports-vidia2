@@ -27,6 +27,17 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 - Desfer (Ctrl+Z), registre d'accions i seguiment en directe des d'altres dispositius.
 - Un sol codificador per partit; la resta del club el pot seguir en directe.
 
+**Fase 2b — Millores i inici de la codificació d'accions**
+
+- Cada jugador pertany a un sol equip; només es poden convocar i alinear jugadors de la plantilla de l'equip.
+- Posició *Universal* per a jugadors que ocupen més d'una posició.
+- Plantilles inventades (Nom1 Cognom1, dorsal 1…) per a rivals dels quals no es coneixen els noms.
+- Importació i exportació CSV d'equips amb jugadors, i de la plantilla d'un equip (compatible amb Excel).
+- Convocar o desconvocar tota la plantilla d'un cop.
+- Canvi automàtic del líbero pels centrals de la zaga quan l'equip perd el servei, amb líbero per defecte.
+- Codificació d'accions de joc (S, R, E, A, B, D, F) amb qualificació, tipus, zones i trajectòria, per teclat (`*12SH#16`) o tàctil, i llegenda de codis.
+- Icona de l'aplicació.
+
 **Properes fases**: codificació de les accions de joc (servei, recepció, col·locació, atac, bloqueig, free ball) amb qualitat, zones i trajectòries; vídeo sincronitzat; estadístiques; importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android.
 
 ## Tecnologia

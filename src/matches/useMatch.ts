@@ -97,8 +97,22 @@ export function useMatch(matchId: string) {
   }, [matchId, loadEvents]);
 
   const rules = useMemo(() => (match ? rulesOf(match) : null), [match]);
-  const replayed = useMemo(() => (rules ? replay(events, rules) : null), [events, rules]);
+  // Dorsals convocats: el motor no deixa alinear ni fer entrar ningú més
+  const rosters = useMemo(
+    () =>
+      players.length === 0
+        ? null
+        : {
+            H: players.filter((p) => p.side === 'H').map((p) => p.shirt_number),
+            A: players.filter((p) => p.side === 'A').map((p) => p.shirt_number),
+          },
+    [players],
+  );
+  const replayed = useMemo(() => (rules ? replay(events, rules, rosters) : null), [events, rules, rosters]);
   const state = replayed?.state ?? null;
+  // Estat més recent, per poder encadenar diversos esdeveniments seguits
+  const stateRef = useRef<MatchState | null>(state);
+  stateRef.current = state;
 
   const isCoder = !!match && !!user && match.coder_id === user.id;
   const canCode = !!match && canEdit && (isCoder || isAdmin);
@@ -120,8 +134,13 @@ export function useMatch(matchId: string) {
 
   // Valida l'esdeveniment amb el motor i, si és correcte, el desa
   const append = useCallback(
-    async (ev: MatchEventData, videoTime: number | null = null): Promise<AppendResult> => {
+    async (
+      input: MatchEventData | ((s: MatchState) => MatchEventData),
+      videoTime: number | null = null,
+    ): Promise<AppendResult> => {
+      const state = stateRef.current;
       if (!state || !match) return { ok: false, error: new Error('not_loaded') };
+      const ev = typeof input === 'function' ? input(state) : input;
       let next: MatchState;
       try {
         next = applyEvent(state, ev);
@@ -132,6 +151,7 @@ export function useMatch(matchId: string) {
       const set = ev.type === 'lineup' ? state.currentSet + 1 : state.currentSet;
       const newEvent = { ...ev, seq, set, videoTime } as MatchEvent;
       next.lastSeq = seq;
+      stateRef.current = next;
       busy.current = true;
       setEvents((list) => [...list, newEvent]); // optimista
       const { error } = await supabase.from('match_events').insert({
@@ -146,13 +166,16 @@ export function useMatch(matchId: string) {
       });
       busy.current = false;
       if (error) {
+        stateRef.current = state;
         setEvents((list) => list.filter((e) => e.seq !== seq));
         return { ok: false, error: new Error(error.message) };
       }
-      if (ev.type === 'point' || ev.type === 'lineup') void syncSummary(next);
+      if (ev.type === 'point' || ev.type === 'lineup' || next.score.H + next.score.A !== state.score.H + state.score.A) {
+        void syncSummary(next);
+      }
       return { ok: true, state: next };
     },
-    [state, match, user, syncSummary],
+    [match, user, syncSummary],
   );
 
   const undo = useCallback(async () => {

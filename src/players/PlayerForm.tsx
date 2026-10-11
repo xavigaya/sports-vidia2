@@ -83,7 +83,13 @@ export function PlayerForm({ clubId, player, onSaved, onCancel }: Props) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const payload = { ...draft, first_name: draft.first_name.trim(), last_name: draft.last_name.trim() };
+    const payload = {
+      ...draft,
+      first_name: draft.first_name.trim(),
+      last_name: draft.last_name.trim(),
+      nickname: draft.nickname?.trim() || null,
+      external_code: draft.external_code?.trim() || null,
+    };
     const q = player
       ? supabase.from('players').update(payload).eq('id', player.id).select().single()
       : supabase.from('players').insert(payload).select().single();

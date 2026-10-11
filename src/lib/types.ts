@@ -1,10 +1,10 @@
 // Tipus de dades que reflecteixen l'esquema de supabase/migrations.
 
 export type ClubRole = 'admin' | 'analyst' | 'viewer';
-export type PlayerPosition = 'S' | 'OH' | 'OPP' | 'MB' | 'L' | 'U';
+export type PlayerPosition = 'S' | 'OH' | 'OPP' | 'MB' | 'L' | 'UNI' | 'U';
 export type TeamGender = 'F' | 'M' | 'X';
 
-export const POSITIONS: PlayerPosition[] = ['S', 'OH', 'OPP', 'MB', 'L', 'U'];
+export const POSITIONS: PlayerPosition[] = ['S', 'OH', 'OPP', 'MB', 'L', 'UNI', 'U'];
 export const ROLES: ClubRole[] = ['admin', 'analyst', 'viewer'];
 
 export interface Club {
@@ -147,7 +147,7 @@ export interface MatchEventRow {
   club_id: string;
   seq: number;
   set_number: number;
-  type: 'lineup' | 'point' | 'sub' | 'libero' | 'timeout';
+  type: 'lineup' | 'point' | 'sub' | 'libero' | 'timeout' | 'action';
   data: Record<string, unknown>;
   video_time: number | null;
   created_at: string;

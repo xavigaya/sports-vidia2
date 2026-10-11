@@ -13,9 +13,10 @@
 // IV→III, III→II.
 // =====================================================================
 
-export type Side = 'H' | 'A'; // H = local (home), A = visitant (away)
+import { other, type Side } from './side';
+import { pointWinner, type Action } from './actions';
 
-export const other = (s: Side): Side => (s === 'H' ? 'A' : 'H');
+export { other, type Side };
 
 export interface MatchRules {
   setsToWin: number; // 3 = al millor de 5
@@ -36,6 +37,12 @@ export const DEFAULT_RULES: MatchRules = {
 export interface TeamLineup {
   positions: number[]; // 6 dorsals, posicions I..VI
   liberos: number[]; // 0, 1 o 2 dorsals
+  // Líbero automàtic: entra pel central (middles) quan aquest és a la zaga
+  // i el seu equip perd el servei.
+  autoLibero?: boolean;
+  middles?: number[];
+  // Líbero que entra per defecte en el canvi automàtic
+  defaultLibero?: number | null;
 }
 
 export type MatchEventData =
@@ -43,7 +50,8 @@ export type MatchEventData =
   | { type: 'point'; side: Side }
   | { type: 'sub'; side: Side; out: number; in: number }
   | { type: 'libero'; side: Side; libero: number; player: number }
-  | { type: 'timeout'; side: Side };
+  | { type: 'timeout'; side: Side }
+  | ({ type: 'action' } & Action);
 
 export type MatchEvent = MatchEventData & {
   seq: number;
@@ -56,10 +64,15 @@ export interface LiberoOnCourt {
   replaces: number; // dorsal del jugador que és a la banqueta pel líbero
 }
 
+export type Rosters = { H: number[]; A: number[] };
+
 export interface TeamState {
   lineup: number[]; // jugadors "reglamentaris" a les posicions I..VI
   liberos: number[];
   libero: LiberoOnCourt | null;
+  lastLibero: number | null;
+  autoLibero: boolean;
+  middles: number[];
   starters: number[];
   subsUsed: number;
   timeoutsUsed: number;
@@ -88,6 +101,10 @@ export interface MatchState {
   teams: { H: TeamState; A: TeamState };
   sets: SetResult[];
   winner: Side | null;
+  // Accions de la jugada en curs (es buida a cada punt)
+  rally: Action[];
+  // Dorsals convocats de cada equip (si es coneixen, es valida que només juguin ells)
+  rosters: Rosters | null;
   // Darrer esdeveniment aplicat
   lastSeq: number;
   // Missatges informatius (p. ex. "el líbero surt automàticament")
@@ -111,7 +128,11 @@ export type EngineErrorCode =
   | 'libero_cannot_serve'
   | 'libero_must_return_for_replaced'
   | 'libero_on_court'
-  | 'sub_libero_replaced';
+  | 'sub_libero_replaced'
+  | 'not_serving_team'
+  | 'not_server'
+  | 'not_receiving_team'
+  | 'not_in_roster';
 
 export class EngineError extends Error {
   constructor(
@@ -145,12 +166,24 @@ export function server(state: MatchState): number | null {
 }
 
 function emptyTeam(): TeamState {
-  return { lineup: [], liberos: [], libero: null, starters: [], subsUsed: 0, timeoutsUsed: 0, pairs: [] };
+  return {
+    lineup: [],
+    liberos: [],
+    libero: null,
+    lastLibero: null,
+    autoLibero: false,
+    middles: [],
+    starters: [],
+    subsUsed: 0,
+    timeoutsUsed: 0,
+    pairs: [],
+  };
 }
 
-export function initialState(rules: MatchRules = DEFAULT_RULES): MatchState {
+export function initialState(rules: MatchRules = DEFAULT_RULES, rosters: Rosters | null = null): MatchState {
   return {
     rules,
+    rosters,
     phase: 'awaiting_lineup',
     currentSet: 0,
     score: { H: 0, A: 0 },
@@ -159,6 +192,7 @@ export function initialState(rules: MatchRules = DEFAULT_RULES): MatchState {
     teams: { H: emptyTeam(), A: emptyTeam() },
     sets: [],
     winner: null,
+    rally: [],
     lastSeq: 0,
     notices: [],
   };
@@ -176,13 +210,18 @@ export function targetPoints(state: MatchState, set = state.currentSet): number 
 // ---------------------------------------------------------------------
 // Validació d'una alineació
 // ---------------------------------------------------------------------
-function checkLineup(l: TeamLineup) {
+function checkRoster(roster: number[] | null | undefined, n: number) {
+  if (roster && !roster.includes(n)) throw new EngineError('not_in_roster', { player: n });
+}
+
+function checkLineup(l: TeamLineup, roster: number[] | null) {
   if (l.positions.length !== 6 || l.positions.some((n) => !Number.isInteger(n) || n < 0 || n > 99)) {
     throw new EngineError('bad_lineup');
   }
   const all = [...l.positions, ...l.liberos];
   if (new Set(all).size !== all.length) throw new EngineError('duplicate_player');
   if (l.liberos.length > 2) throw new EngineError('bad_lineup');
+  for (const n of all) checkRoster(roster, n);
 }
 
 // ---------------------------------------------------------------------
@@ -197,8 +236,8 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
   switch (ev.type) {
     case 'lineup': {
       if (s.phase === 'in_play') throw new EngineError('set_in_play');
-      checkLineup(ev.home);
-      checkLineup(ev.away);
+      checkLineup(ev.home, s.rosters?.H ?? null);
+      checkLineup(ev.away, s.rosters?.A ?? null);
       s.currentSet += 1;
       s.score = { H: 0, A: 0 };
       s.serving = ev.serving;
@@ -209,8 +248,12 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
           lineup: [...l.positions],
           liberos: [...l.liberos],
           starters: [...l.positions],
+          autoLibero: !!l.autoLibero && l.liberos.length > 0,
+          middles: (l.middles ?? []).filter((n) => !l.liberos.includes(n)),
+          lastLibero: l.defaultLibero != null && l.liberos.includes(l.defaultLibero) ? l.defaultLibero : null,
         };
       }
+      s.rally = [];
       s.sets.push({
         number: s.currentSet,
         home: 0,
@@ -220,42 +263,38 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
         startLineups: { H: structuredClone(ev.home), A: structuredClone(ev.away) },
       });
       s.phase = 'in_play';
+      // Líbero automàtic a l'inici del set: entra pel central de la zaga
+      // (si l'equip serveix, el central de la posició I ha de servir)
+      for (const side of ['H', 'A'] as Side[]) {
+        const t = s.teams[side];
+        if (!t.autoLibero) continue;
+        const backRow = s.serving === side ? [4, 5] : BACK_ROW;
+        const idx = backRow.find((i) => t.middles.includes(t.lineup[i]));
+        if (idx !== undefined) autoLiberoIn(s, side, t.lineup[idx]);
+      }
       return s;
     }
 
     case 'point': {
       requireInPlay(s);
-      const winner = ev.side;
-      s.score[winner] += 1;
-      if (winner !== s.serving) {
-        // Canvi de servei: l'equip que el recupera rota
-        const t = s.teams[winner];
-        t.lineup = rotate(t.lineup);
-        s.serving = winner;
-        // Si el jugador substituït pel líbero passa a la davantera, el líbero surt
-        if (t.libero) {
-          const idx = t.lineup.indexOf(t.libero.replaces);
-          if (FRONT_ROW.includes(idx)) {
-            s.notices.push(`libero_auto_out:${winner}:${t.libero.libero}:${t.libero.replaces}`);
-            t.libero = null;
-          }
-        }
+      awardPoint(s, ev.side);
+      return s;
+    }
+
+    case 'action': {
+      requireInPlay(s);
+      const t = s.teams[ev.side];
+      if (!onCourt(t).includes(ev.player)) throw new EngineError('player_not_on_court', { player: ev.player });
+      if (ev.skill === 'S') {
+        if (s.serving !== ev.side) throw new EngineError('not_serving_team');
+        if (onCourt(t)[0] !== ev.player) throw new EngineError('not_server', { player: onCourt(t)[0] });
       }
-      const cur = s.sets[s.sets.length - 1];
-      cur.home = s.score.H;
-      cur.away = s.score.A;
-      const target = targetPoints(s);
-      const lead = s.score[winner] - s.score[other(winner)];
-      if (s.score[winner] >= target && lead >= 2) {
-        cur.winner = winner;
-        s.setsWon[winner] += 1;
-        if (s.setsWon[winner] >= s.rules.setsToWin) {
-          s.phase = 'match_over';
-          s.winner = winner;
-        } else {
-          s.phase = 'awaiting_lineup';
-        }
-      }
+      if (ev.skill === 'R' && s.serving === ev.side) throw new EngineError('not_receiving_team');
+      const action: Action = { ...ev };
+      delete (action as { type?: string }).type;
+      s.rally.push(action);
+      const winner = pointWinner(ev);
+      if (winner) awardPoint(s, winner);
       return s;
     }
 
@@ -270,6 +309,7 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
     case 'sub': {
       requireInPlay(s);
       const t = s.teams[ev.side];
+      checkRoster(s.rosters?.[ev.side], ev.in);
       validateSub(s, t, ev.out, ev.in);
       const pair = t.pairs.find((p) => p.sub === ev.out && !p.returned);
       if (pair) pair.returned = true;
@@ -329,6 +369,7 @@ function applyLibero(s: MatchState, side: Side, t: TeamState, libero: number, pl
     // Canvi de líbero per líbero
     if (player === t.libero.libero) {
       t.libero = { libero, replaces: t.libero.replaces };
+      t.lastLibero = libero;
       return;
     }
     throw new EngineError('libero_on_court', { player: t.libero.libero });
@@ -340,6 +381,55 @@ function applyLibero(s: MatchState, side: Side, t: TeamState, libero: number, pl
   if (!BACK_ROW.includes(idx)) throw new EngineError('libero_front_row', { player });
   if (idx === 0 && s.serving === side) throw new EngineError('libero_cannot_serve');
   t.libero = { libero, replaces: player };
+  t.lastLibero = libero;
+}
+
+function autoLiberoIn(s: MatchState, side: Side, player: number) {
+  const t = s.teams[side];
+  if (t.libero || t.liberos.length === 0) return;
+  const libero = t.lastLibero ?? t.liberos[0];
+  t.libero = { libero, replaces: player };
+  t.lastLibero = libero;
+  s.notices.push(`libero_auto_in:${side}:${libero}:${player}`);
+}
+
+// Punt per a 'winner': rotació, líberos automàtics i final de set/partit
+function awardPoint(s: MatchState, winner: Side) {
+  s.score[winner] += 1;
+  s.rally = [];
+  if (winner !== s.serving) {
+    const loser = s.serving;
+    // Canvi de servei: l'equip que el recupera rota
+    const t = s.teams[winner];
+    t.lineup = rotate(t.lineup);
+    s.serving = winner;
+    // Si el jugador substituït pel líbero passa a la davantera, el líbero surt
+    if (t.libero) {
+      const idx = t.lineup.indexOf(t.libero.replaces);
+      if (FRONT_ROW.includes(idx)) {
+        s.notices.push(`libero_auto_out:${winner}:${t.libero.libero}:${t.libero.replaces}`);
+        t.libero = null;
+      }
+    }
+    // L'equip que perd el servei: si qui acaba de servir és un central, entra el líbero
+    const l = s.teams[loser];
+    if (l.autoLibero && l.middles.includes(l.lineup[0])) autoLiberoIn(s, loser, l.lineup[0]);
+  }
+  const cur = s.sets[s.sets.length - 1];
+  cur.home = s.score.H;
+  cur.away = s.score.A;
+  const target = targetPoints(s);
+  const lead = s.score[winner] - s.score[other(winner)];
+  if (s.score[winner] >= target && lead >= 2) {
+    cur.winner = winner;
+    s.setsWon[winner] += 1;
+    if (s.setsWon[winner] >= s.rules.setsToWin) {
+      s.phase = 'match_over';
+      s.winner = winner;
+    } else {
+      s.phase = 'awaiting_lineup';
+    }
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -352,8 +442,8 @@ export interface ReplayResult {
   errors: { seq: number; error: EngineError }[];
 }
 
-export function replay(events: MatchEvent[], rules: MatchRules = DEFAULT_RULES): ReplayResult {
-  let state = initialState(rules);
+export function replay(events: MatchEvent[], rules: MatchRules = DEFAULT_RULES, rosters: Rosters | null = null): ReplayResult {
+  let state = initialState(rules, rosters);
   const errors: ReplayResult['errors'] = [];
   for (const ev of [...events].sort((a, b) => a.seq - b.seq)) {
     try {

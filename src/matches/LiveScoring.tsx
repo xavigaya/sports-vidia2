@@ -16,7 +16,9 @@ import {
   type MatchState,
   type Side,
 } from '../engine/match';
-import { eventCode, parseCommand } from '../engine/commands';
+import { eventCode, parseCommand, resolveAction } from '../engine/commands';
+import { ActionPad, type Selection } from './ActionPad';
+import { Legend, EVAL_KEY } from './Legend';
 import { Court } from './Court';
 import { LineupForm } from './LineupForm';
 import type { UseMatch } from './useMatch';
@@ -43,6 +45,8 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const [subSide, setSubSide] = useState<Side | null>(null);
   const [liberoSide, setLiberoSide] = useState<Side | null>(null);
   const [command, setCommand] = useState('');
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [legendOpen, setLegendOpen] = useState(false);
   const cmdRef = useRef<HTMLInputElement>(null);
 
   const names: Record<SideCode, string> = { H: match.home.short_name ?? match.home.name, A: match.away.short_name ?? match.away.name };
@@ -62,21 +66,24 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const nextSet = state.currentSet + 1;
 
   const send = useCallback(
-    async (ev: MatchEventData) => {
+    async (ev: MatchEventData | ((s: MatchState) => MatchEventData)) => {
       setMessage(null);
       const r = await m.append(ev);
       if (!r.ok) {
         setMessage({ kind: 'error', text: engineErrorText(t, r.error) });
         return false;
       }
-      const auto = r.state.notices.find((n) => n.startsWith('libero_auto_out'));
-      if (auto) {
-        const [, side, libero, player] = auto.split(':');
-        setMessage({ kind: 'info', text: t('live.liberoAutoOut', { team: names[side as Side], libero, player }) });
+      const infos: string[] = [];
+      for (const n of r.state.notices) {
+        const [kind, side, libero, player] = n.split(':');
+        if (kind === 'libero_auto_out') infos.push(t('live.liberoAutoOut', { team: names[side as Side], libero, player }));
+        if (kind === 'libero_auto_in') infos.push(t('live.liberoAutoIn', { team: names[side as Side], libero, player }));
       }
-      if (r.state.phase === 'awaiting_lineup' && ev.type === 'point') {
-        setMessage({ kind: 'info', text: t('live.setOver', { set: r.state.currentSet, team: names[ev.side] }) });
+      const lastSet = r.state.sets[r.state.sets.length - 1];
+      if (r.state.phase !== 'in_play' && lastSet?.winner && (r.state.score.H + r.state.score.A > 0)) {
+        infos.push(t('live.setOver', { set: lastSet.number, team: names[lastSet.winner] }));
       }
+      if (infos.length) setMessage({ kind: 'info', text: infos.join(' ') });
       return true;
     },
     [m, t, names],
@@ -111,10 +118,18 @@ export function LiveScoring({ m }: { m: UseMatch }) {
     e.preventDefault();
     const r = parseCommand(command);
     if (!r.ok) {
-      if (r.error !== 'empty') setMessage({ kind: 'error', text: t(`live.cmd.${r.error}`) });
+      if (r.error !== 'empty') setMessage({ kind: 'error', text: `${t(`live.cmd.${r.error}`)} (${r.token})` });
       return;
     }
-    if (await send(r.event)) setCommand('');
+    for (const ev of r.events) {
+      const ok = await send((st) => (ev.type === 'partial_action' ? resolveAction(st, ev) : ev));
+      if (!ok) {
+        // Es deixa a la línia només el que no s'ha pogut desar
+        setCommand(command.trim().split(/\s+/).slice(r.events.indexOf(ev)).join(' '));
+        return;
+      }
+    }
+    setCommand('');
   }
 
   const log = useMemo(() => buildLog(m.events, state.rules), [m.events, state.rules]);
@@ -183,6 +198,8 @@ export function LiveScoring({ m }: { m: UseMatch }) {
                 serving={inPlay && state.serving === side}
                 netOnRight={i === 0}
                 color={colors[side]}
+                selected={selection?.side === side ? selection.player : null}
+                onPlayerClick={canCode && inPlay ? (n) => setSelection({ side, player: n }) : undefined}
               />
             </div>
           ))}
@@ -190,7 +207,21 @@ export function LiveScoring({ m }: { m: UseMatch }) {
         </section>
       )}
 
-      {/* Accions */}
+      {/* Codificació d'accions */}
+      {canCode && inPlay && (
+        <ActionPad
+          state={state}
+          selection={selection}
+          setSelection={setSelection}
+          names={names}
+          colors={colors}
+          players={playerMaps}
+          flipped={flip}
+          send={send}
+        />
+      )}
+
+      {/* Marcador manual */}
       {canCode && (
         <section className="actions">
           {(flip ? (['A', 'H'] as Side[]) : SIDES).map((side) => (
@@ -243,26 +274,9 @@ export function LiveScoring({ m }: { m: UseMatch }) {
             <button className="btn" onClick={() => setFlip((f) => !f)}>
               ⇄ {t('live.swapSides')}
             </button>
-            <details className="cmd-help">
-              <summary>{t('live.cmdHelpTitle')}</summary>
-              <ul className="small">
-                <li>
-                  <code>*p</code> / <code>ap</code> — {t('live.cmdHelp.point')}
-                </li>
-                <li>
-                  <code>*T</code> / <code>aT</code> — {t('live.cmdHelp.timeout')}
-                </li>
-                <li>
-                  <code>*c3:13</code> — {t('live.cmdHelp.sub')}
-                </li>
-                <li>
-                  <code>*l10:5</code> — {t('live.cmdHelp.libero')}
-                </li>
-                <li>
-                  <kbd>Ctrl</kbd>+<kbd>Z</kbd> — {t('live.cmdHelp.undo')}
-                </li>
-              </ul>
-            </details>
+            <button className="btn cmd-help" onClick={() => setLegendOpen(true)}>
+              {t('legend.title')}
+            </button>
           </div>
         </section>
       )}
@@ -291,6 +305,10 @@ export function LiveScoring({ m }: { m: UseMatch }) {
           </ol>
         )}
       </section>
+
+      <Modal title={t('legend.title')} open={legendOpen} onClose={() => setLegendOpen(false)}>
+        <Legend />
+      </Modal>
 
       <Modal title={t('live.lineupForSet', { n: nextSet })} open={lineupOpen && state.phase === 'awaiting_lineup'} onClose={() => setLineupOpen(false)}>
         <LineupForm
@@ -496,5 +514,9 @@ function describe(
       return t('live.desc.sub', { team: names[ev.side], out: who(ev.side, ev.out), in: who(ev.side, ev.in) });
     case 'libero':
       return t('live.desc.libero', { team: names[ev.side], libero: who(ev.side, ev.libero), player: who(ev.side, ev.player) });
+    case 'action': {
+      const zones = ev.startZone || ev.endZone ? ` · ${ev.startZone ?? '?'}→${ev.endZone ?? '?'}` : '';
+      return `${names[ev.side]} ${who(ev.side, ev.player)}: ${t(`skills.${ev.skill}`)} · ${t(`evals.${ev.skill}.${EVAL_KEY[ev.evaluation]}`)}${zones}`;
+    }
   }
 }

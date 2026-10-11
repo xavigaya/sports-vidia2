@@ -15,8 +15,11 @@ import {
 import { ColorSwatch, EmptyState, ErrorBox, Modal, PageHeader, Spinner } from '../components/ui';
 import { TeamForm } from './TeamForm';
 import { emptyPlayer, PlayerFields } from '../players/PlayerForm';
+import { CsvImport } from './CsvImport';
+import { exportTeamsCsv } from './importTeams';
+import { downloadText, safeFilename } from '../lib/csv';
 
-const POSITION_ORDER: Record<PlayerPosition, number> = { S: 0, OPP: 1, OH: 2, MB: 3, L: 4, U: 5 };
+const POSITION_ORDER: Record<PlayerPosition, number> = { S: 0, OPP: 1, OH: 2, MB: 3, L: 4, UNI: 5, U: 6 };
 
 export function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -31,6 +34,8 @@ export function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingTeam, setEditingTeam] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const load = useCallback(async () => {
     if (!teamId) return;
@@ -167,11 +172,30 @@ export function TeamDetailPage() {
           <h2>
             {t('teams.roster')} <span className="muted">({roster.filter((r) => r.active).length})</span>
           </h2>
-          {canEdit && (
-            <button className="btn btn-primary" onClick={() => setAdding(true)}>
-              + {t('players.addToRoster')}
+          <div className="row wrap">
+            {canEdit && (
+              <>
+                <button className="btn" onClick={() => setGenerating(true)}>
+                  {t('teams.generic')}
+                </button>
+                <button className="btn" onClick={() => setImporting(true)}>
+                  ⤓ {t('csv.importBtn')}
+                </button>
+              </>
+            )}
+            <button
+              className="btn"
+              disabled={roster.length === 0}
+              onClick={async () => downloadText(`${safeFilename(team.name)}.csv`, await exportTeamsCsv(club.id, [team.id]))}
+            >
+              ⤒ {t('csv.exportBtn')}
             </button>
-          )}
+            {canEdit && (
+              <button className="btn btn-primary" onClick={() => setAdding(true)}>
+                + {t('players.addToRoster')}
+              </button>
+            )}
+          </div>
         </div>
 
         {sorted.length === 0 ? (
@@ -281,6 +305,28 @@ export function TeamDetailPage() {
         />
       </Modal>
 
+      <Modal title={t('csv.importTitleTeam', { team: team.name })} open={importing} onClose={() => setImporting(false)}>
+        <CsvImport
+          clubId={club.id}
+          targetTeam={team}
+          onDone={() => {
+            setImporting(false);
+            void load();
+          }}
+        />
+      </Modal>
+
+      <Modal title={t('teams.generic')} open={generating} onClose={() => setGenerating(false)}>
+        <GenericRoster
+          team={team}
+          roster={roster}
+          onDone={() => {
+            setGenerating(false);
+            void load();
+          }}
+        />
+      </Modal>
+
       <Modal title={t('players.addToRoster')} open={adding} onClose={() => setAdding(false)}>
         <AddToRoster
           team={team}
@@ -320,14 +366,16 @@ function AddToRoster({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const inRoster = new Set(roster.map((r) => r.player_id));
+    // Els jugadors pertanyen a un sol equip: només s'ofereixen els que no en tenen cap
     supabase
       .from('players')
-      .select('*')
+      .select('*, team_players(team_id)')
       .eq('club_id', team.club_id)
       .order('last_name')
       .then(({ data }) => {
-        const list = ((data ?? []) as Player[]).filter((p) => !inRoster.has(p.id));
+        const list = ((data ?? []) as (Player & { team_players: { team_id: string }[] })[]).filter(
+          (p) => p.team_players.length === 0,
+        );
         setAvailable(list);
         if (list.length === 0) setMode('new');
       });
@@ -381,7 +429,7 @@ function AddToRoster({
           disabled={available.length === 0}
           onClick={() => setMode('existing')}
         >
-          {t('players.existing')}
+          {t('players.existingNoTeam')}
         </button>
         <button type="button" role="tab" aria-selected={mode === 'new'} className={mode === 'new' ? 'on' : ''} onClick={() => setMode('new')}>
           {t('players.createNew')}
@@ -429,6 +477,83 @@ function AddToRoster({
         </button>
         <button className="btn btn-primary" disabled={busy}>
           {t('common.add')}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// Plantilla inventada: Nom1 Cognom1 (dorsal 1), Nom2 Cognom2 (dorsal 2)…
+function GenericRoster({ team, roster, onDone }: { team: Team; roster: TeamPlayer[]; onDone: () => void }) {
+  const { t } = useTranslation();
+  const [count, setCount] = useState(12);
+  const [liberos, setLiberos] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const used = new Set(roster.filter((r) => r.active).map((r) => r.shirt_number));
+  const numbers: number[] = [];
+  for (let n = 1; n <= 99 && numbers.length < count; n++) if (!used.has(n)) numbers.push(n);
+
+  async function onCreate(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const first = t('teams.genericFirst');
+    const last = t('teams.genericLast');
+    const { data, error } = await supabase
+      .from('players')
+      .insert(numbers.map((n) => ({ club_id: team.club_id, first_name: `${first}${n}`, last_name: `${last}${n}` })))
+      .select('id, first_name');
+    if (error || !data) {
+      setBusy(false);
+      setError(error?.message ?? 'error');
+      return;
+    }
+    const ids = new Map((data as { id: string; first_name: string }[]).map((p) => [p.first_name, p.id]));
+    const rows = numbers.map((n, i) => ({
+      team_id: team.id,
+      player_id: ids.get(`${first}${n}`)!,
+      club_id: team.club_id,
+      shirt_number: n,
+      position: (i >= numbers.length - liberos ? 'L' : 'U') as PlayerPosition,
+    }));
+    const tp = await supabase.from('team_players').insert(rows);
+    setBusy(false);
+    if (tp.error) {
+      setError(tp.error.message);
+      return;
+    }
+    onDone();
+  }
+
+  return (
+    <form onSubmit={onCreate} className="stack">
+      <p className="muted small">{t('teams.genericHelp')}</p>
+      <div className="grid-2">
+        <label className="field">
+          <span>{t('teams.genericCount')}</span>
+          <input type="number" min={1} max={30} value={count} onChange={(e) => setCount(Math.max(1, Math.min(30, Number(e.target.value))))} />
+        </label>
+        <label className="field">
+          <span>{t('teams.genericLiberos')}</span>
+          <select value={liberos} onChange={(e) => setLiberos(Number(e.target.value))}>
+            <option value={0}>0</option>
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+          </select>
+        </label>
+      </div>
+      <p className="small">
+        {numbers
+          .slice(0, 4)
+          .map((n) => `${t('teams.genericFirst')}${n} ${t('teams.genericLast')}${n} (${n})`)
+          .join(', ')}
+        {numbers.length > 4 && ', …'}
+      </p>
+      {error && <ErrorBox message={error} />}
+      <div className="row end">
+        <button className="btn btn-primary" disabled={busy || numbers.length === 0}>
+          {t('common.create')}
         </button>
       </div>
     </form>

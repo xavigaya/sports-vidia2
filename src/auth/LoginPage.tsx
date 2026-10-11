@@ -94,13 +94,6 @@ export function LoginPage() {
   );
 }
 
-export function BallMark({ size = 44 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" className="ball-mark">
-      <circle cx="24" cy="24" r="21" fill="var(--brand)" />
-      <path d="M24 3c-4 7-4 17 0 21s13 6 20 3" fill="none" stroke="var(--brand-contrast)" strokeWidth="2.5" />
-      <path d="M8 10c7 1 13 6 16 14s1 15-4 21" fill="none" stroke="var(--brand-contrast)" strokeWidth="2.5" />
-      <path d="M5 30c8-3 16-3 19-6" fill="none" stroke="var(--brand-contrast)" strokeWidth="2.5" />
-    </svg>
-  );
+export function BallMark({ size = 48 }: { size?: number }) {
+  return <img src={`${import.meta.env.BASE_URL}favicon.svg`} width={size} height={size} alt="" className="ball-mark" />;
 }

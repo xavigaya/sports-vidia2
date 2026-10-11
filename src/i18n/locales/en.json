@@ -75,7 +75,7 @@
   },
   "home": {
     "welcome": "Welcome to {{club}}",
-    "phaseNote": "You can now create matches and keep the live score: line-ups, points, substitutions, liberos and time-outs. Coding of game actions and video arrive in the next phases.",
+    "phaseNote": "You can now create matches, keep the score and code every game action (serve, reception, set, attack, block, dig and free ball) with its rating, zones and trajectory. Video and statistics arrive in the next phases.",
     "teams": "Teams",
     "players": "Players",
     "members": "Users"
@@ -113,7 +113,13 @@
     "archived": "Archived",
     "showArchived": "Show archived",
     "roster": "Roster",
-    "playersCount": "{{count}} players"
+    "playersCount": "{{count}} players",
+    "generic": "Generic roster",
+    "genericHelp": "Creates placeholder players with consecutive numbers, handy for opponents: Name1 Surname1 (number 1), Name2 Surname2 (number 2)… You can edit them later.",
+    "genericCount": "Number of players",
+    "genericLiberos": "Liberos (last numbers)",
+    "genericFirst": "Name",
+    "genericLast": "Surname"
   },
   "players": {
     "title": "Players",
@@ -134,7 +140,10 @@
     "active": "Active",
     "existing": "Existing player",
     "createNew": "Create a new player",
-    "numberTaken": "That number is already taken in this team."
+    "numberTaken": "That number is already taken in this team.",
+    "existingNoTeam": "Player without team",
+    "allTeams": "All teams",
+    "noTeam": "No team"
   },
   "positions": {
     "S": "Setter",
@@ -142,7 +151,8 @@
     "OPP": "Opposite",
     "MB": "Middle blocker",
     "L": "Libero",
-    "U": "Unknown"
+    "U": "Unknown",
+    "UNI": "Universal"
   },
   "matches": {
     "title": "Matches",
@@ -178,7 +188,9 @@
     "takeOverHelp": "As an administrator, you become the coder for this match.",
     "tabLive": "Scoreboard",
     "tabRoster": "Match roster",
-    "needRoster": "Before starting, check both teams’ match rosters."
+    "needRoster": "Before starting, check both teams’ match rosters.",
+    "selectAll": "Select whole roster",
+    "selectNone": "Remove all"
   },
   "live": {
     "serving": "Serving",
@@ -196,7 +208,7 @@
     "point": "Point",
     "timeout": "Time-out",
     "sub": "Sub",
-    "cmdPlaceholder": "Code: *p, ap, *T, *c3:13…",
+    "cmdPlaceholder": "Codes: S+ 7R# a11A= *p *c3:13…",
     "cmdLabel": "Command line",
     "lineupForSet": "Set {{n}} line-up",
     "undo": "Undo",
@@ -229,13 +241,19 @@
     },
     "cmd": {
       "side": "Codes start with * (home) or a (away).",
-      "syntax": "Unrecognised code."
+      "syntax": "Unrecognised code.",
+      "player_required": "Shirt number missing."
     },
     "lineupIncomplete": "Fill in all six positions for each team.",
     "lineupHelp": "Enter who plays in each position at the start of set {{set}}, as on the score sheet.",
     "tiebreakToss": "In the deciding set, first serve is decided by a toss.",
     "firstServe": "First serve",
-    "startSet": "Start set {{set}}"
+    "startSet": "Start set {{set}}",
+    "liberoAutoIn": "{{team}}: libero {{libero}} comes in for {{player}}.",
+    "autoLibero": "Automatic libero for middle blockers",
+    "autoLiberoMiddles": "Comes in when a middle has just served (middles: {{list}}).",
+    "autoLiberoNoMiddles": "No selected player is a Middle blocker: set it in the roster.",
+    "defaultLibero": "Default libero"
   },
   "engine": {
     "needs_lineup": "Enter the set line-up first.",
@@ -254,6 +272,144 @@
     "libero_cannot_serve": "The libero cannot enter at position I while their team is serving.",
     "libero_must_return_for_replaced": "When the libero leaves, {{player}} must return.",
     "libero_on_court": "A libero is already on court ({{player}}).",
-    "sub_libero_replaced": "{{player}} is off court for the libero: the libero must leave first."
+    "sub_libero_replaced": "{{player}} is off court for the libero: the libero must leave first.",
+    "not_serving_team": "This team is not serving.",
+    "not_server": "{{player}} is serving (position I).",
+    "not_receiving_team": "The reception must be by the receiving team.",
+    "not_in_roster": "{{player}} is not on this team’s match roster."
+  },
+  "skills": {
+    "S": "Serve",
+    "R": "Reception",
+    "E": "Set",
+    "A": "Attack",
+    "B": "Block",
+    "D": "Dig",
+    "F": "Free ball"
+  },
+  "evals": {
+    "S": {
+      "perfect": "Ace",
+      "positive": "Positive: opponent attacks with difficulty",
+      "ok": "OK: opponent cannot run a quick",
+      "negative": "Negative: perfect opponent pass",
+      "poor": "Very positive: opponent cannot attack",
+      "error": "Serve error"
+    },
+    "R": {
+      "perfect": "Perfect: all attack options",
+      "positive": "Positive",
+      "ok": "OK: no quick",
+      "negative": "Negative: limited attack",
+      "poor": "Poor: overpass or no attack",
+      "error": "Error: aced"
+    },
+    "E": {
+      "perfect": "Perfect",
+      "positive": "Positive",
+      "ok": "OK",
+      "negative": "Negative",
+      "poor": "Poor",
+      "error": "Set error"
+    },
+    "A": {
+      "perfect": "Kill",
+      "positive": "Positive: hard dig for opponent",
+      "ok": "Covered: can attack again",
+      "negative": "Negative: easy dig for opponent",
+      "poor": "Blocked (opponent point)",
+      "error": "Error (out, net…)"
+    },
+    "B": {
+      "perfect": "Block point",
+      "positive": "Positive: touch allowing counter-attack",
+      "ok": "Fair touch",
+      "negative": "Negative: easy rebound for opponent",
+      "poor": "Invasion or fault (opponent point)",
+      "error": "Error: block out"
+    },
+    "D": {
+      "perfect": "Perfect",
+      "positive": "Positive",
+      "ok": "OK",
+      "negative": "Negative: no counter-attack",
+      "poor": "Ball returned straight over",
+      "error": "Dig error"
+    },
+    "F": {
+      "perfect": "Perfect",
+      "positive": "Positive",
+      "ok": "OK",
+      "negative": "Negative",
+      "poor": "Poor",
+      "error": "Error"
+    }
+  },
+  "skillTypes": {
+    "H": "High",
+    "M": "Medium",
+    "Q": "Quick",
+    "T": "Tense",
+    "U": "Super",
+    "F": "Fast",
+    "O": "Other"
+  },
+  "legend": {
+    "title": "Code legend",
+    "structure": "Structure of an action code",
+    "partTeam": "Team: * home, a away (if omitted: home; for serves, the serving team; for receptions, the receiving team)",
+    "partPlayer": "Shirt number (1 or 2 digits; may be omitted for serves)",
+    "partSkill": "Skill",
+    "partType": "Type (optional)",
+    "partEval": "Rating",
+    "partStart": "Start zone (optional, 1–9 or ~)",
+    "partEnd": "End zone (optional, 1–9)",
+    "defaults": "You can type several codes in a row separated by spaces. Case does not matter.",
+    "evalTitle": "Ratings by skill",
+    "pointFor": "Point for the team",
+    "pointAgainst": "Point for the opponent",
+    "autoPoint": "These actions end the rally and add the point automatically.",
+    "typesTitle": "Types",
+    "zonesTitle": "Court zones",
+    "net": "net",
+    "zonesHelp": "Each half court is numbered from the point of view of the team playing on it. Turn on “Mark zones” to tap start and end on the court.",
+    "scoreTitle": "Score",
+    "examplesTitle": "Examples",
+    "ex1": "positive serve by the player in position I",
+    "ex2": "perfect reception by away player 7",
+    "ex3": "set by 3 and winning quick attack by away 11, from zone 3 to 8",
+    "ex4": "serve error by home 12 (point for away)",
+    "ex5": "full rally: the block by away 2 wins the point"
+  },
+  "code": {
+    "pickPlayer": "Tap a player on court (or choose Serve)",
+    "zonesMode": "Mark zones and trajectory",
+    "tapStart": "Tap the start on the court",
+    "tapEnd": "Tap the end",
+    "saveWithout": "Save without zones"
+  },
+  "csv": {
+    "importBtn": "Import CSV",
+    "exportBtn": "Export CSV",
+    "importTitleAll": "Import teams and players",
+    "importTitleTeam": "Import players into {{team}}",
+    "helpAll": "Each row is a player. The “team” column says which team they belong to; missing teams are created. You can use Excel and save as “CSV UTF-8”.",
+    "helpTeam": "Each row is a player of {{team}}. You can use Excel and save as “CSV UTF-8”.",
+    "chooseFile": "Choose a CSV file",
+    "template": "Download a sample template",
+    "needTeamColumn": "The file has no “team” column. To import it, open a team’s page and import the players there.",
+    "preview": "{{rows}} players read",
+    "teamsInFile": "Teams: {{teams}}",
+    "err": {
+      "no_header": "Line {{line}}: the file is empty.",
+      "no_number": "The “number” column is missing.",
+      "no_name": "Line {{line}}: name missing.",
+      "bad_number": "Line {{line}}: invalid number."
+    },
+    "newTeamsOwn": "New teams belong to the club (otherwise they are created as opponents)",
+    "updateRule": "If a number already exists in the team, that player’s details are updated.",
+    "import": "Import {{rows}} players",
+    "result": "Done: {{teams}} new teams, {{created}} new players and {{updated}} updated.",
+    "rowErrors": "Rows with errors:"
   }
 }

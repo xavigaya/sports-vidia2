@@ -15,10 +15,11 @@ interface Props {
   serving: boolean;
   netOnRight: boolean;
   color: string;
+  selected?: number | null;
   onPlayerClick?: (number: number) => void;
 }
 
-export function Court({ team, players, serving, netOnRight, color, onPlayerClick }: Props) {
+export function Court({ team, players, serving, netOnRight, color, selected, onPlayerClick }: Props) {
   const { t } = useTranslation();
   const court = onCourt(team);
   const order = netOnRight ? LEFT_OF_NET : RIGHT_OF_NET;
@@ -34,7 +35,7 @@ export function Court({ team, players, serving, netOnRight, color, onPlayerClick
           <button
             key={idx}
             type="button"
-            className={`court-cell ${isLibero ? 'libero' : ''} ${isServer ? 'server' : ''}`}
+            className={`court-cell ${isLibero ? 'libero' : ''} ${isServer ? 'server' : ''} ${selected === n ? 'selected' : ''} ${onPlayerClick ? 'clickable' : ''}`}
             onClick={onPlayerClick ? () => onPlayerClick(n) : undefined}
             disabled={!onPlayerClick}
             title={p ? playerDisplayName(p.players) : undefined}

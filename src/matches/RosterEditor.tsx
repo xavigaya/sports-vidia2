@@ -51,6 +51,38 @@ export function RosterEditor({ m }: { m: UseMatch }) {
     await m.reloadPlayers();
   }
 
+  // Convoca (o desconvoca) tota la plantilla activa d'un equip
+  async function setAll(side: SideCode, on: boolean) {
+    setError(null);
+    const inMatch = m.players.filter((p) => p.side === side);
+    if (on) {
+      const missing = rosters[side].filter((tp) => tp.active && !inMatch.some((p) => p.player_id === tp.player_id));
+      if (missing.length) {
+        const { error } = await supabase.from('match_players').insert(
+          missing.map((tp) => ({
+            match_id: match.id,
+            club_id: match.club_id,
+            side,
+            player_id: tp.player_id,
+            shirt_number: tp.shirt_number,
+            position: tp.position,
+            is_libero: tp.position === 'L',
+            is_captain: tp.is_captain,
+          })),
+        );
+        if (error) setError(error.code === '23505' ? t('players.numberTaken') : error.message);
+      }
+    } else if (inMatch.length) {
+      const { error } = await supabase
+        .from('match_players')
+        .delete()
+        .eq('match_id', match.id)
+        .eq('side', side);
+      if (error) setError(error.message);
+    }
+    await m.reloadPlayers();
+  }
+
   async function update(mp: MatchPlayer, patch: Partial<Pick<MatchPlayer, 'shirt_number' | 'is_libero'>>) {
     setError(null);
     const { error } = await supabase.from('match_players').update(patch).eq('match_id', match.id).eq('player_id', mp.player_id);
@@ -70,6 +102,18 @@ export function RosterEditor({ m }: { m: UseMatch }) {
             {t('matches.called', { count: inMatch.length })} · {t('matches.liberosCount', { count: liberos })}
           </span>
         </div>
+        {editable && rosters[side].length > 0 && (
+          <div className="row wrap">
+            <button className="btn btn-sm" onClick={() => void setAll(side, true)}>
+              ✓ {t('matches.selectAll')}
+            </button>
+            {!started && (
+              <button className="btn btn-sm" onClick={() => void setAll(side, false)} disabled={inMatch.length === 0}>
+                {t('matches.selectNone')}
+              </button>
+            )}
+          </div>
+        )}
         {rosters[side].length === 0 ? (
           <p className="muted">{t('matches.noRoster')}</p>
         ) : (

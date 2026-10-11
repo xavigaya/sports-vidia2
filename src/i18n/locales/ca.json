@@ -75,7 +75,7 @@
   },
   "home": {
     "welcome": "Benvingut/da a {{club}}",
-    "phaseNote": "Ja pots crear partits i portar-ne el marcador en directe: alineacions, punts, canvis, líberos i temps morts. La codificació de les accions de joc i el vídeo arribaran a les properes fases.",
+    "phaseNote": "Ja pots crear partits, portar-ne el marcador i codificar totes les accions de joc (servei, recepció, col·locació, atac, bloqueig, defensa i free ball) amb la seva qualificació, zones i trajectòria. El vídeo i les estadístiques arribaran a les properes fases.",
     "teams": "Equips",
     "players": "Jugadors",
     "members": "Usuaris"
@@ -113,7 +113,13 @@
     "archived": "Arxivat",
     "showArchived": "Mostra els arxivats",
     "roster": "Plantilla",
-    "playersCount": "{{count}} jugadors"
+    "playersCount": "{{count}} jugadors",
+    "generic": "Plantilla genèrica",
+    "genericHelp": "Crea jugadors inventats amb dorsals correlatius, útil per als rivals: Nom1 Cognom1 (dorsal 1), Nom2 Cognom2 (dorsal 2)… Es poden editar després.",
+    "genericCount": "Nombre de jugadors",
+    "genericLiberos": "Líberos (els darrers dorsals)",
+    "genericFirst": "Nom",
+    "genericLast": "Cognom"
   },
   "players": {
     "title": "Jugadors",
@@ -134,7 +140,10 @@
     "active": "Actiu",
     "existing": "Jugador existent",
     "createNew": "Crea un jugador nou",
-    "numberTaken": "Aquest dorsal ja està assignat en aquest equip."
+    "numberTaken": "Aquest dorsal ja està assignat en aquest equip.",
+    "existingNoTeam": "Jugador sense equip",
+    "allTeams": "Tots els equips",
+    "noTeam": "Sense equip"
   },
   "positions": {
     "S": "Col·locador/a",
@@ -142,7 +151,8 @@
     "OPP": "Oposat/da",
     "MB": "Central",
     "L": "Líbero",
-    "U": "Indeterminat"
+    "U": "Indeterminat",
+    "UNI": "Universal"
   },
   "matches": {
     "title": "Partits",
@@ -178,7 +188,9 @@
     "takeOverHelp": "Com a administrador, passes a ser el codificador d'aquest partit.",
     "tabLive": "Marcador",
     "tabRoster": "Convocatòria",
-    "needRoster": "Abans de començar, revisa la convocatòria dels dos equips."
+    "needRoster": "Abans de començar, revisa la convocatòria dels dos equips.",
+    "selectAll": "Convoca tota la plantilla",
+    "selectNone": "Treu-los tots"
   },
   "live": {
     "serving": "Serveix",
@@ -196,7 +208,7 @@
     "point": "Punt",
     "timeout": "Temps mort",
     "sub": "Canvi",
-    "cmdPlaceholder": "Codi: *p, ap, *T, *c3:13…",
+    "cmdPlaceholder": "Codis: S+ 7R# a11A= *p *c3:13…",
     "cmdLabel": "Línia d'ordres",
     "lineupForSet": "Alineació del set {{n}}",
     "undo": "Desfés",
@@ -229,13 +241,19 @@
     },
     "cmd": {
       "side": "El codi ha de començar per * (local) o a (visitant).",
-      "syntax": "Codi no reconegut."
+      "syntax": "Codi no reconegut.",
+      "player_required": "Falta el dorsal."
     },
     "lineupIncomplete": "Cal omplir les sis posicions de cada equip.",
     "lineupHelp": "Indica qui juga a cada posició a l’inici del set {{set}}, tal com consta a l’acta.",
     "tiebreakToss": "Al set decisiu, el primer servei es decideix per sorteig.",
     "firstServe": "Primer servei",
-    "startSet": "Comença el set {{set}}"
+    "startSet": "Comença el set {{set}}",
+    "liberoAutoIn": "{{team}}: el líbero {{libero}} entra pel {{player}}.",
+    "autoLibero": "Líbero automàtic pels centrals",
+    "autoLiberoMiddles": "Entra quan un central acaba de servir (centrals: {{list}}).",
+    "autoLiberoNoMiddles": "Cap jugador convocat té la posició Central: marca-la a la plantilla.",
+    "defaultLibero": "Líbero per defecte"
   },
   "engine": {
     "needs_lineup": "Primer cal introduir l'alineació del set.",
@@ -254,6 +272,144 @@
     "libero_cannot_serve": "El líbero no pot entrar a la posició I quan el seu equip serveix.",
     "libero_must_return_for_replaced": "Quan surt el líbero ha de tornar el {{player}}.",
     "libero_on_court": "Ja hi ha un líbero al camp ({{player}}).",
-    "sub_libero_replaced": "El {{player}} és a la banqueta pel líbero: primer ha de sortir el líbero."
+    "sub_libero_replaced": "El {{player}} és a la banqueta pel líbero: primer ha de sortir el líbero.",
+    "not_serving_team": "Aquest equip no té el servei.",
+    "not_server": "El servei el fa el {{player}} (posició I).",
+    "not_receiving_team": "La recepció l’ha de fer l’equip que rep.",
+    "not_in_roster": "El {{player}} no és a la convocatòria d’aquest equip."
+  },
+  "skills": {
+    "S": "Servei",
+    "R": "Recepció",
+    "E": "Col·locació",
+    "A": "Atac",
+    "B": "Bloqueig",
+    "D": "Defensa",
+    "F": "Free ball"
+  },
+  "evals": {
+    "S": {
+      "perfect": "Ace",
+      "positive": "Positiu: el rival ataca amb dificultat",
+      "ok": "Regular: el rival no pot fer primer temps",
+      "negative": "Negatiu: recepció perfecta del rival",
+      "poor": "Molt positiu: el rival no pot atacar",
+      "error": "Error de servei"
+    },
+    "R": {
+      "perfect": "Perfecta: totes les opcions d’atac",
+      "positive": "Positiva",
+      "ok": "Regular: sense primer temps",
+      "negative": "Negativa: atac limitat",
+      "poor": "Molt negativa: passa directa o sense atac",
+      "error": "Error: ace rebut"
+    },
+    "E": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa",
+      "poor": "Molt negativa",
+      "error": "Error de col·locació"
+    },
+    "A": {
+      "perfect": "Punt",
+      "positive": "Positiu: defensa difícil del rival",
+      "ok": "Cobert: es pot tornar a atacar",
+      "negative": "Negatiu: defensa fàcil del rival",
+      "poor": "Bloquejat (punt del rival)",
+      "error": "Error (fora, xarxa…)"
+    },
+    "B": {
+      "perfect": "Punt de bloqueig",
+      "positive": "Positiu: toc que permet contraatac",
+      "ok": "Toc regular",
+      "negative": "Negatiu: rebot fàcil per al rival",
+      "poor": "Invasió o falta (punt del rival)",
+      "error": "Error: rebot fora"
+    },
+    "D": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa: sense contraatac",
+      "poor": "Pilota retornada directa al rival",
+      "error": "Error de defensa"
+    },
+    "F": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa",
+      "poor": "Molt negativa",
+      "error": "Error"
+    }
+  },
+  "skillTypes": {
+    "H": "Alta",
+    "M": "Mitja",
+    "Q": "Ràpida",
+    "T": "Tensa",
+    "U": "Super",
+    "F": "Rapida (fast)",
+    "O": "Altres"
+  },
+  "legend": {
+    "title": "Llegenda de codis",
+    "structure": "Estructura d'un codi d'acció",
+    "partTeam": "Equip: * local, a visitant (si no s’indica: local; al servei, l’equip que serveix; a la recepció, l’equip que rep)",
+    "partPlayer": "Dorsal (1 o 2 xifres; al servei es pot ometre)",
+    "partSkill": "Fonament",
+    "partType": "Tipus (opcional)",
+    "partEval": "Qualificació",
+    "partStart": "Zona d’inici (opcional, 1–9 o ~)",
+    "partEnd": "Zona final (opcional, 1–9)",
+    "defaults": "Es poden escriure diversos codis seguits separats per espais. Majúscules i minúscules indiferents.",
+    "evalTitle": "Qualificacions per fonament",
+    "pointFor": "Punt per a l’equip",
+    "pointAgainst": "Punt per al rival",
+    "autoPoint": "Aquestes accions tanquen la jugada i sumen el punt automàticament.",
+    "typesTitle": "Tipus",
+    "zonesTitle": "Zones del camp",
+    "net": "xarxa",
+    "zonesHelp": "Cada mig camp es numera des del punt de vista de l’equip que hi juga. Activa «Marca zones» per tocar origen i destinació al camp.",
+    "scoreTitle": "Marcador",
+    "examplesTitle": "Exemples",
+    "ex1": "servei positiu del jugador que és a la posició I",
+    "ex2": "recepció perfecta del 7 visitant",
+    "ex3": "col·locació del 3 i atac ràpid guanyador de l’11 visitant, de la zona 3 a la 8",
+    "ex4": "error de servei del 12 local (punt per al visitant)",
+    "ex5": "jugada completa: el bloqueig del 2 visitant suma el punt"
+  },
+  "code": {
+    "pickPlayer": "Toca un jugador al camp (o tria Servei)",
+    "zonesMode": "Marca zones i trajectòria",
+    "tapStart": "Toca l’origen al camp",
+    "tapEnd": "Toca la destinació",
+    "saveWithout": "Desa sense zones"
+  },
+  "csv": {
+    "importBtn": "Importa CSV",
+    "exportBtn": "Exporta CSV",
+    "importTitleAll": "Importa equips i jugadors",
+    "importTitleTeam": "Importa jugadors a {{team}}",
+    "helpAll": "Cada fila és un jugador. La columna «equip» indica a quin equip va; si l’equip no existeix, es crea. Es pot fer amb Excel desant com a «CSV UTF-8».",
+    "helpTeam": "Cada fila és un jugador de {{team}}. Es pot fer amb Excel desant com a «CSV UTF-8».",
+    "chooseFile": "Tria un fitxer CSV",
+    "template": "Baixa una plantilla d’exemple",
+    "needTeamColumn": "El fitxer no té columna «equip». Per importar-lo, obre la fitxa d’un equip i importa-hi els jugadors.",
+    "preview": "{{rows}} jugadors llegits",
+    "teamsInFile": "Equips: {{teams}}",
+    "err": {
+      "no_header": "Línia {{line}}: el fitxer és buit.",
+      "no_number": "Falta la columna «dorsal».",
+      "no_name": "Línia {{line}}: falta el nom.",
+      "bad_number": "Línia {{line}}: dorsal incorrecte."
+    },
+    "newTeamsOwn": "Els equips nous són del club (si no, es creen com a rivals)",
+    "updateRule": "Si un dorsal ja existeix a l’equip, s’actualitzen les dades d’aquell jugador.",
+    "import": "Importa {{rows}} jugadors",
+    "result": "Fet: {{teams}} equips nous, {{created}} jugadors nous i {{updated}} actualitzats.",
+    "rowErrors": "Files amb errors:"
   }
 }

@@ -15,14 +15,29 @@ interface Props {
   onCancel: () => void;
 }
 
+function playerName(list: MatchPlayer[], n: number): string {
+  const p = list.find((x) => x.shirt_number === n);
+  return p ? playerDisplayName(p.players) : '';
+}
+
+function middlesOf(players: MatchPlayer[], side: SideCode): number[] {
+  return players.filter((p) => p.side === side && p.position === 'MB').map((p) => p.shirt_number);
+}
+
 function blank(players: MatchPlayer[], side: SideCode): TeamLineup {
-  return { positions: [-1, -1, -1, -1, -1, -1], liberos: players.filter((p) => p.side === side && p.is_libero).map((p) => p.shirt_number) };
+  const liberos = players.filter((p) => p.side === side && p.is_libero).map((p) => p.shirt_number);
+  const middles = middlesOf(players, side);
+  return { positions: [-1, -1, -1, -1, -1, -1], liberos, middles, autoLibero: liberos.length > 0 && middles.length > 0 };
 }
 
 export function LineupForm({ setNumber, isTiebreak, players, teamNames, initial, onSubmit, onCancel }: Props) {
   const { t } = useTranslation();
-  const [home, setHome] = useState<TeamLineup>(initial?.home ?? blank(players, 'H'));
-  const [away, setAway] = useState<TeamLineup>(initial?.away ?? blank(players, 'A'));
+  const [home, setHome] = useState<TeamLineup>(
+    initial ? { ...initial.home, middles: middlesOf(players, 'H') } : blank(players, 'H'),
+  );
+  const [away, setAway] = useState<TeamLineup>(
+    initial ? { ...initial.away, middles: middlesOf(players, 'A') } : blank(players, 'A'),
+  );
   const [serving, setServing] = useState<Side>(initial?.serving ?? 'H');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +87,39 @@ export function LineupForm({ setNumber, isTiebreak, players, teamNames, initial,
             </label>
           ))}
         </div>
+        {value.liberos.length > 0 && (
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={!!value.autoLibero}
+              onChange={(e) => setValue({ ...value, autoLibero: e.target.checked })}
+            />
+            <span>
+              {t('live.autoLibero')}
+              <br />
+              <small className="muted">
+                {value.middles && value.middles.length > 0
+                  ? t('live.autoLiberoMiddles', { list: value.middles.join(', ') })
+                  : t('live.autoLiberoNoMiddles')}
+              </small>
+            </span>
+          </label>
+        )}
+        {value.autoLibero && value.liberos.length > 1 && (
+          <label className="row small">
+            <span className="muted">{t('live.defaultLibero')}</span>
+            <select
+              value={value.defaultLibero ?? value.liberos[0]}
+              onChange={(e) => setValue({ ...value, defaultLibero: Number(e.target.value) })}
+            >
+              {value.liberos.map((n) => (
+                <option key={n} value={n}>
+                  {n} · {playerName(list, n)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {liberoCandidates.length > 0 && (
           <div className="row wrap">
             <span className="small muted">{t('positions.L')}:</span>
@@ -107,7 +155,13 @@ export function LineupForm({ setNumber, isTiebreak, players, teamNames, initial,
       return;
     }
     setBusy(true);
-    setError(await onSubmit({ home, away, serving }));
+    // Els centrals es prenen sempre de la convocatòria actual
+    const fix = (l: TeamLineup, side: SideCode): TeamLineup => ({
+      ...l,
+      middles: middlesOf(players, side),
+      autoLibero: !!l.autoLibero && l.liberos.length > 0,
+    });
+    setError(await onSubmit({ home: fix(home, 'H'), away: fix(away, 'A'), serving }));
     setBusy(false);
   }
 

@@ -75,7 +75,7 @@
   },
   "home": {
     "welcome": "Bienvenido/a a {{club}}",
-    "phaseNote": "Ya puedes crear partidos y llevar el marcador en directo: alineaciones, puntos, cambios, líberos y tiempos muertos. La codificación de las acciones de juego y el vídeo llegarán en las próximas fases.",
+    "phaseNote": "Ya puedes crear partidos, llevar el marcador y codificar todas las acciones de juego (saque, recepción, colocación, ataque, bloqueo, defensa y free ball) con su calificación, zonas y trayectoria. El vídeo y las estadísticas llegarán en las próximas fases.",
     "teams": "Equipos",
     "players": "Jugadores",
     "members": "Usuarios"
@@ -113,7 +113,13 @@
     "archived": "Archivado",
     "showArchived": "Mostrar los archivados",
     "roster": "Plantilla",
-    "playersCount": "{{count}} jugadores"
+    "playersCount": "{{count}} jugadores",
+    "generic": "Plantilla genérica",
+    "genericHelp": "Crea jugadores inventados con dorsales correlativos, útil para los rivales: Nombre1 Apellido1 (dorsal 1), Nombre2 Apellido2 (dorsal 2)… Se pueden editar después.",
+    "genericCount": "Número de jugadores",
+    "genericLiberos": "Líberos (los últimos dorsales)",
+    "genericFirst": "Nombre",
+    "genericLast": "Apellido"
   },
   "players": {
     "title": "Jugadores",
@@ -134,7 +140,10 @@
     "active": "Activo",
     "existing": "Jugador existente",
     "createNew": "Crear un jugador nuevo",
-    "numberTaken": "Este dorsal ya está asignado en este equipo."
+    "numberTaken": "Este dorsal ya está asignado en este equipo.",
+    "existingNoTeam": "Jugador sin equipo",
+    "allTeams": "Todos los equipos",
+    "noTeam": "Sin equipo"
   },
   "positions": {
     "S": "Colocador/a",
@@ -142,7 +151,8 @@
     "OPP": "Opuesto/a",
     "MB": "Central",
     "L": "Líbero",
-    "U": "Indeterminado"
+    "U": "Indeterminado",
+    "UNI": "Universal"
   },
   "matches": {
     "title": "Partidos",
@@ -178,7 +188,9 @@
     "takeOverHelp": "Como administrador, pasas a ser el codificador de este partido.",
     "tabLive": "Marcador",
     "tabRoster": "Convocatoria",
-    "needRoster": "Antes de empezar, revisa la convocatoria de los dos equipos."
+    "needRoster": "Antes de empezar, revisa la convocatoria de los dos equipos.",
+    "selectAll": "Convocar toda la plantilla",
+    "selectNone": "Quitarlos todos"
   },
   "live": {
     "serving": "Saca",
@@ -196,7 +208,7 @@
     "point": "Punto",
     "timeout": "Tiempo muerto",
     "sub": "Cambio",
-    "cmdPlaceholder": "Código: *p, ap, *T, *c3:13…",
+    "cmdPlaceholder": "Códigos: S+ 7R# a11A= *p *c3:13…",
     "cmdLabel": "Línea de órdenes",
     "lineupForSet": "Alineación del set {{n}}",
     "undo": "Deshacer",
@@ -229,13 +241,19 @@
     },
     "cmd": {
       "side": "El código debe empezar por * (local) o a (visitante).",
-      "syntax": "Código no reconocido."
+      "syntax": "Código no reconocido.",
+      "player_required": "Falta el dorsal."
     },
     "lineupIncomplete": "Hay que rellenar las seis posiciones de cada equipo.",
     "lineupHelp": "Indica quién juega en cada posición al inicio del set {{set}}, tal como consta en el acta.",
     "tiebreakToss": "En el set decisivo, el primer saque se decide por sorteo.",
     "firstServe": "Primer saque",
-    "startSet": "Empieza el set {{set}}"
+    "startSet": "Empieza el set {{set}}",
+    "liberoAutoIn": "{{team}}: el líbero {{libero}} entra por el {{player}}.",
+    "autoLibero": "Líbero automático por los centrales",
+    "autoLiberoMiddles": "Entra cuando un central acaba de sacar (centrales: {{list}}).",
+    "autoLiberoNoMiddles": "Ningún jugador convocado tiene la posición Central: márcala en la plantilla.",
+    "defaultLibero": "Líbero por defecto"
   },
   "engine": {
     "needs_lineup": "Primero hay que introducir la alineación del set.",
@@ -254,6 +272,144 @@
     "libero_cannot_serve": "El líbero no puede entrar en la posición I cuando su equipo saca.",
     "libero_must_return_for_replaced": "Cuando sale el líbero debe volver el {{player}}.",
     "libero_on_court": "Ya hay un líbero en el campo ({{player}}).",
-    "sub_libero_replaced": "El {{player}} está en el banquillo por el líbero: primero debe salir el líbero."
+    "sub_libero_replaced": "El {{player}} está en el banquillo por el líbero: primero debe salir el líbero.",
+    "not_serving_team": "Este equipo no tiene el saque.",
+    "not_server": "Saca el {{player}} (posición I).",
+    "not_receiving_team": "La recepción la debe hacer el equipo que recibe.",
+    "not_in_roster": "El {{player}} no está en la convocatoria de este equipo."
+  },
+  "skills": {
+    "S": "Saque",
+    "R": "Recepción",
+    "E": "Colocación",
+    "A": "Ataque",
+    "B": "Bloqueo",
+    "D": "Defensa",
+    "F": "Free ball"
+  },
+  "evals": {
+    "S": {
+      "perfect": "Ace",
+      "positive": "Positivo: el rival ataca con dificultad",
+      "ok": "Regular: el rival no puede hacer primer tiempo",
+      "negative": "Negativo: recepción perfecta del rival",
+      "poor": "Muy positivo: el rival no puede atacar",
+      "error": "Error de saque"
+    },
+    "R": {
+      "perfect": "Perfecta: todas las opciones de ataque",
+      "positive": "Positiva",
+      "ok": "Regular: sin primer tiempo",
+      "negative": "Negativa: ataque limitado",
+      "poor": "Muy negativa: pasa directa o sin ataque",
+      "error": "Error: ace recibido"
+    },
+    "E": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa",
+      "poor": "Muy negativa",
+      "error": "Error de colocación"
+    },
+    "A": {
+      "perfect": "Punto",
+      "positive": "Positivo: defensa difícil del rival",
+      "ok": "Cubierto: se puede volver a atacar",
+      "negative": "Negativo: defensa fácil del rival",
+      "poor": "Bloqueado (punto del rival)",
+      "error": "Error (fuera, red…)"
+    },
+    "B": {
+      "perfect": "Punto de bloqueo",
+      "positive": "Positivo: toque que permite contraataque",
+      "ok": "Toque regular",
+      "negative": "Negativo: rebote fácil para el rival",
+      "poor": "Invasión o falta (punto del rival)",
+      "error": "Error: rebote fuera"
+    },
+    "D": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa: sin contraataque",
+      "poor": "Balón devuelto directo al rival",
+      "error": "Error de defensa"
+    },
+    "F": {
+      "perfect": "Perfecta",
+      "positive": "Positiva",
+      "ok": "Regular",
+      "negative": "Negativa",
+      "poor": "Muy negativa",
+      "error": "Error"
+    }
+  },
+  "skillTypes": {
+    "H": "Alta",
+    "M": "Media",
+    "Q": "Rápida",
+    "T": "Tensa",
+    "U": "Súper",
+    "F": "Rápida (fast)",
+    "O": "Otros"
+  },
+  "legend": {
+    "title": "Leyenda de códigos",
+    "structure": "Estructura de un código de acción",
+    "partTeam": "Equipo: * local, a visitante (si no se indica: local; en el saque, el equipo que saca; en la recepción, el que recibe)",
+    "partPlayer": "Dorsal (1 o 2 cifras; en el saque se puede omitir)",
+    "partSkill": "Fundamento",
+    "partType": "Tipo (opcional)",
+    "partEval": "Calificación",
+    "partStart": "Zona de inicio (opcional, 1–9 o ~)",
+    "partEnd": "Zona final (opcional, 1–9)",
+    "defaults": "Se pueden escribir varios códigos seguidos separados por espacios. Mayúsculas y minúsculas indiferentes.",
+    "evalTitle": "Calificaciones por fundamento",
+    "pointFor": "Punto para el equipo",
+    "pointAgainst": "Punto para el rival",
+    "autoPoint": "Estas acciones cierran la jugada y suman el punto automáticamente.",
+    "typesTitle": "Tipos",
+    "zonesTitle": "Zonas del campo",
+    "net": "red",
+    "zonesHelp": "Cada medio campo se numera desde el punto de vista del equipo que juega en él. Activa «Marcar zonas» para tocar origen y destino en el campo.",
+    "scoreTitle": "Marcador",
+    "examplesTitle": "Ejemplos",
+    "ex1": "saque positivo del jugador en la posición I",
+    "ex2": "recepción perfecta del 7 visitante",
+    "ex3": "colocación del 3 y ataque rápido ganador del 11 visitante, de la zona 3 a la 8",
+    "ex4": "error de saque del 12 local (punto para el visitante)",
+    "ex5": "jugada completa: el bloqueo del 2 visitante suma el punto"
+  },
+  "code": {
+    "pickPlayer": "Toca un jugador en el campo (o elige Saque)",
+    "zonesMode": "Marcar zonas y trayectoria",
+    "tapStart": "Toca el origen en el campo",
+    "tapEnd": "Toca el destino",
+    "saveWithout": "Guardar sin zonas"
+  },
+  "csv": {
+    "importBtn": "Importar CSV",
+    "exportBtn": "Exportar CSV",
+    "importTitleAll": "Importar equipos y jugadores",
+    "importTitleTeam": "Importar jugadores a {{team}}",
+    "helpAll": "Cada fila es un jugador. La columna «equipo» indica a qué equipo va; si el equipo no existe, se crea. Se puede hacer con Excel guardando como «CSV UTF-8».",
+    "helpTeam": "Cada fila es un jugador de {{team}}. Se puede hacer con Excel guardando como «CSV UTF-8».",
+    "chooseFile": "Elige un archivo CSV",
+    "template": "Descargar una plantilla de ejemplo",
+    "needTeamColumn": "El archivo no tiene columna «equipo». Para importarlo, abre la ficha de un equipo e importa allí los jugadores.",
+    "preview": "{{rows}} jugadores leídos",
+    "teamsInFile": "Equipos: {{teams}}",
+    "err": {
+      "no_header": "Línea {{line}}: el archivo está vacío.",
+      "no_number": "Falta la columna «dorsal».",
+      "no_name": "Línea {{line}}: falta el nombre.",
+      "bad_number": "Línea {{line}}: dorsal incorrecto."
+    },
+    "newTeamsOwn": "Los equipos nuevos son del club (si no, se crean como rivales)",
+    "updateRule": "Si un dorsal ya existe en el equipo, se actualizan los datos de ese jugador.",
+    "import": "Importar {{rows}} jugadores",
+    "result": "Hecho: {{teams}} equipos nuevos, {{created}} jugadores nuevos y {{updated}} actualizados.",
+    "rowErrors": "Filas con errores:"
   }
 }
