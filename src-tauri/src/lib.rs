@@ -3,5 +3,5 @@
 pub fn run() {
     tauri::Builder::default()
         .run(tauri::generate_context!())
-        .expect("error en arrencar Sports VidIA");
+        .expect("error en arrencar Volei VidIA");
 }

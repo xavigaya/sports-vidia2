@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Accions de joc, posició Universal i jugadors lligats a un equip
+-- Volei VidIA — Accions de joc, posició Universal i jugadors lligats a un equip
 -- =====================================================================
 
 -- Posició "Universal" per a jugadors que poden ocupar més d'una posició

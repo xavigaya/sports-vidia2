@@ -1,4 +1,4 @@
-// Service worker de Sports VidIA: permet obrir l'aplicació sense connexió.
+// Service worker de Volei VidIA: permet obrir l'aplicació sense connexió.
 // - Pàgines: primer la xarxa; si no n'hi ha, la còpia desada.
 // - Fitxers de l'aplicació (JS, CSS, icones): còpia desada i actualització en segon pla.
 // Les dades (Supabase) i YouTube no passen per aquí.

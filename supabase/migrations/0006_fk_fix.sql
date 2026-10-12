@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Correcció de claus foranes
+-- Volei VidIA — Correcció de claus foranes
 -- =====================================================================
 -- Un jugador o un equip que ha jugat partits continua sense poder-se
 -- esborrar directament (les estadístiques en depenen), però la restricció

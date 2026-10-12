@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Partits (fase 2)
+-- Volei VidIA — Partits (fase 2)
 -- Partits, convocatòria i esdeveniments (alineacions, punts, canvis,
 -- líberos, temps morts). L'estat del partit es calcula a l'aplicació
 -- reproduint els esdeveniments en ordre.

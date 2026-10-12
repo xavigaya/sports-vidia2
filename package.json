@@ -1,8 +1,8 @@
 {
-  "name": "sports-vidia2",
+  "name": "volei-vidia",
   "private": true,
-  "version": "0.8.0",
-  "description": "Sports VidIA 2 \u2014 estad\u00edstiques de voleibol amb v\u00eddeo, compatible amb DataVolley",
+  "version": "0.8.1",
+  "description": "Volei VidIA \u2014 estad\u00edstiques de voleibol amb v\u00eddeo, compatible amb DataVolley",
   "type": "module",
   "scripts": {
     "dev": "vite",

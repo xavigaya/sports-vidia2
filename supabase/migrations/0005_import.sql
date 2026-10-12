@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Partits importats (fase 6)
+-- Volei VidIA — Partits importats (fase 6)
 -- =====================================================================
 
 -- Els partits importats (p. ex. de DataVolley) no validen qui és al camp

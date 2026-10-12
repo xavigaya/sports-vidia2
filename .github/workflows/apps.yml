@@ -89,12 +89,12 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
       - name: Nom del fitxer
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk "SportsVidIA-v$(node -p "require('./package.json').version").apk"
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk "VoleiVidIA-v$(node -p "require('./package.json').version").apk"
       - uses: actions/upload-artifact@v4
         with:
           name: android
           if-no-files-found: error
-          path: SportsVidIA-*.apk
+          path: VoleiVidIA-*.apk
 
   release:
     name: Publica la versió
@@ -115,9 +115,9 @@ jobs:
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || steps.ver.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: Sports VidIA ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || steps.ver.outputs.tag }}
+          name: Volei VidIA ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || steps.ver.outputs.tag }}
           body: |
-            Aplicacions instal·lables de Sports VidIA.
+            Aplicacions instal·lables de Volei VidIA.
 
             - **Windows**: `.msi` o `.exe` (instal·lador).
             - **Linux**: `.deb` (Ubuntu/Debian/Linkat), `.rpm` (Fedora) o `.AppImage` (qualsevol distribució).

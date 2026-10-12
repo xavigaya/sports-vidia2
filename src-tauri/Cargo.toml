@@ -1,12 +1,12 @@
 [package]
-name = "sports-vidia"
-version = "0.8.0"
-description = "Sports VidIA — estadístiques de voleibol amb vídeo"
-authors = ["Sports VidIA"]
+name = "volei-vidia"
+version = "0.8.1"
+description = "Volei VidIA — estadístiques de voleibol amb vídeo"
+authors = ["Volei VidIA"]
 edition = "2021"
 
 [lib]
-name = "sports_vidia_lib"
+name = "volei_vidia_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

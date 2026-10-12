@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Pujada de vídeos a YouTube (fase 8)
+-- Volei VidIA — Pujada de vídeos a YouTube (fase 8)
 -- =====================================================================
 -- Compte i llista de reproducció de YouTube on el club puja els vídeos.
 -- L'ID de client OAuth de Google és públic (no és cap secret).

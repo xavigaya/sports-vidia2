@@ -441,7 +441,7 @@ export function exportDvw(input: ExportInput): string {
   const setsWon = (sd: Side) => s.sets.filter((x) => x.winner === sd).length;
   const dd = `${p2(date.getDate())}/${p2(date.getMonth() + 1)}/${date.getFullYear()}`;
 
-  out.push('[3DATAVOLLEYSCOUT]', 'FILEFORMAT: 2.0', 'GENERATOR-PRG: Sports VidIA', `GENERATOR-DAY: ${dd} ${hhmmss(new Date())}`);
+  out.push('[3DATAVOLLEYSCOUT]', 'FILEFORMAT: 2.0', 'GENERATOR-PRG: Volei VidIA', `GENERATOR-DAY: ${dd} ${hhmmss(new Date())}`);
   out.push('[3MATCH]', `${dd};${hhmmss(date)};${input.season};${input.league};${input.phase};;;;;;Z;0;`);
   out.push('[3TEAMS]');
   input.teams.forEach((t, i) => out.push(`${t.code};${t.name};${setsWon(i === 0 ? 'H' : 'A')};${t.coach};${t.assistant};;;;`));

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Sports VidIA",
-  "version": "0.8.0",
-  "identifier": "cat.sportsvidia.app",
+  "productName": "Volei VidIA",
+  "version": "0.8.1",
+  "identifier": "cat.voleividia.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Sports VidIA",
+        "title": "Volei VidIA",
         "width": 1400,
         "height": 900,
         "minWidth": 900,

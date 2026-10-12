@@ -2,7 +2,7 @@
 // com a alternativa). S'hi guarden les dades per treballar sense connexió i
 // la cua de canvis pendents d'enviar.
 
-const DB_NAME = 'sports-vidia';
+const DB_NAME = 'sports-vidia'; // nom antic: es manté per no perdre les dades desades
 const STORE = 'kv';
 
 let dbPromise: Promise<IDBDatabase | null> | null = null;

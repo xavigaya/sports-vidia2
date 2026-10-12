@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Esquema inicial (fase 1)
+-- Volei VidIA — Esquema inicial (fase 1)
 -- Clubs amb dades aïllades, usuaris i rols, equips, jugadors i plantilles.
 --
 -- Principis:

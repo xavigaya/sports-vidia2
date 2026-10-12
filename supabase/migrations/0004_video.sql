@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sports VidIA 2 — Vídeo del partit (fase 4)
+-- Volei VidIA — Vídeo del partit (fase 4)
 -- =====================================================================
 
 -- Vídeo associat al partit: enllaç de YouTube, o nom del fitxer local

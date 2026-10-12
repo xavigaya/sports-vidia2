@@ -1,4 +1,4 @@
-# Sports VidIA 2
+# Volei VidIA
 
 Aplicació per generar estadístiques de partits de voleibol a partir de vídeo (local o de YouTube), amb codificació compatible amb DataVolley / Click&Scout. Funcionarà al navegador, en tauletes Android i com a aplicació d'escriptori de Windows i Linux.
 
@@ -101,8 +101,8 @@ Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir
 Cal tenir [Node.js](https://nodejs.org) 20 o superior.
 
 ```bash
-git clone https://github.com/xavigaya/sports-vidia2.git
-cd sports-vidia2
+git clone https://github.com/xavigaya/volei-vidia.git
+cd volei-vidia
 cp .env.example .env      # a Windows (PowerShell): Copy-Item .env.example .env
                           # i omple-hi l'URL i la clau de Supabase
 npm install
@@ -125,7 +125,7 @@ Si la versió nova porta un fitxer nou a `supabase/migrations/`, executa'l a l'S
 Descarrega-les de la pàgina **Releases** del repositori de GitHub:
 
 - **Windows**: executa el `.msi` o el `.exe`. Com que no està signada, Windows pot mostrar l'avís «Windows ha protegit l'ordinador»: *Més informació → Executa igualment*.
-- **Linux**: `sudo apt install ./Sports.VidIA_*.deb` (Ubuntu, Debian, Linkat) o fes executable l'`.AppImage`.
+- **Linux**: `sudo apt install ./Volei.VidIA_*.deb` (Ubuntu, Debian, Linkat) o fes executable l'`.AppImage`.
 - **Android**: copia l'`.apk` a la tauleta i obre'l; cal permetre instal·lar aplicacions de fonts desconegudes.
 
 Per compilar-les tu mateix: `npm run desktop:build` (cal [Rust](https://rustup.rs) i les dependències de Tauri) o, per a Android, `npm run build && npx cap add android && npx cap open android` (cal Android Studio).
