@@ -28,7 +28,7 @@ import type { MatchEventData, MatchState, Side } from './match';
 import { onCourt } from './match';
 import { other } from './side';
 import type { Evaluation, Skill, SkillType } from './actions';
-import { actionCode, pointWinner } from './actions';
+import { actionCode, isComplement } from './actions';
 
 export type ParseError = 'empty' | 'side' | 'syntax' | 'player_required';
 
@@ -127,7 +127,7 @@ export function defaultSide(state: MatchState, p: Pick<PartialAction, 'skill' | 
   if (p.skill === 'S') return state.serving;
   if (state.closing) {
     const opp = other(state.closing.side);
-    if (pointWinner({ side: opp, skill: p.skill, evaluation: p.evaluation }) === state.closing.winner) return opp;
+    if (isComplement(state.closing, p)) return opp;
   }
   if (p.skill === 'R') return other(state.serving);
   const last = state.rally[state.rally.length - 1];

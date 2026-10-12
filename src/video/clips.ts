@@ -58,3 +58,25 @@ export function buildClips(events: MatchEvent[], rules: MatchRules, filter: Clip
   }
   return clips;
 }
+
+// Filtre ↔ paràmetre d'URL (per obrir els vídeos filtrats des de les estadístiques)
+export function filterToParam(f: Partial<ClipFilter>): string {
+  return JSON.stringify({ ...EMPTY_FILTER, ...f });
+}
+
+export function paramToFilter(v: string | null): ClipFilter | null {
+  if (!v) return null;
+  try {
+    const o = JSON.parse(v) as Partial<ClipFilter>;
+    return {
+      side: o.side === 'H' || o.side === 'A' ? o.side : null,
+      player: typeof o.player === 'number' ? o.player : null,
+      skills: Array.isArray(o.skills) ? o.skills : [],
+      evaluations: Array.isArray(o.evaluations) ? o.evaluations : [],
+      set: typeof o.set === 'number' ? o.set : null,
+      pointsOnly: !!o.pointsOnly,
+    };
+  } catch {
+    return null;
+  }
+}

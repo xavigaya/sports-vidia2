@@ -26,6 +26,7 @@ import { VideoPanel, sourceFromMatch } from '../video/VideoPanel';
 import { ClipsPanel } from '../video/ClipsPanel';
 import type { PlayerHandle, VideoSource } from '../video/VideoPlayer';
 import { formatTime } from '../video/youtube';
+import { paramToFilter } from '../video/clips';
 import { readAutoPause, writeAutoPause, type AutoPause } from '../video/autoPause';
 
 const SIDES: Side[] = ['H', 'A'];
@@ -39,7 +40,7 @@ function isTouch(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
 }
 
-export function LiveScoring({ m }: { m: UseMatch }) {
+export function LiveScoring({ m, clipFilter }: { m: UseMatch; clipFilter?: string | null }) {
   const { t } = useTranslation();
   const club = useCurrentClub();
   const match = m.match!;
@@ -205,7 +206,18 @@ export function LiveScoring({ m }: { m: UseMatch }) {
           autoPause={autoPause}
           setAutoPause={setAutoPause}
         />
-        {source && <ClipsPanel events={m.events} rules={state.rules} playerRef={playerRef} names={names} players={playerMaps} />}
+        {source ? (
+          <ClipsPanel
+            events={m.events}
+            rules={state.rules}
+            playerRef={playerRef}
+            names={names}
+            players={playerMaps}
+            initialFilter={paramToFilter(clipFilter ?? null)}
+          />
+        ) : (
+          clipFilter && <div className="notice">{t('clips.needVideo')}</div>
+        )}
       </div>
     <div className="live">
       {/* Marcador */}

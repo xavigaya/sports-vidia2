@@ -8,6 +8,7 @@ import { LanguagePicker } from './LanguagePicker';
 const NAV = [
   { to: '/', key: 'home', icon: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
   { to: '/matches', key: 'matches', icon: 'M4 5h16v14H4zM12 5v14M4 12h16' },
+  { to: '/stats', key: 'stats', icon: 'M4 20V11M10 20V5M16 20v-8M21 20H3' },
   { to: '/teams', key: 'teams', icon: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5' },
   { to: '/players', key: 'players', icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9c0-4 3-6 7-6s7 2 7 6' },
   { to: '/members', key: 'members', icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z' },

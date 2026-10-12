@@ -6,8 +6,10 @@ import { useMatch } from './useMatch';
 import { useClub } from '../club/ClubProvider';
 import { LiveScoring } from './LiveScoring';
 import { RosterEditor } from './RosterEditor';
+import { MatchStatsView } from '../stats/MatchStatsView';
+import { filterToParam } from '../video/clips';
 
-type Tab = 'live' | 'roster';
+type Tab = 'live' | 'roster' | 'stats';
 
 export function MatchPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -16,7 +18,8 @@ export function MatchPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const tab: Tab = params.get('tab') === 'roster' ? 'roster' : 'live';
+  const tabParam = params.get('tab');
+  const tab: Tab = tabParam === 'roster' || tabParam === 'stats' ? tabParam : 'live';
 
   if (m.loading) return <Spinner />;
   if (!m.match || !m.state) return <ErrorBox message={m.error ?? '404'} />;
@@ -71,6 +74,9 @@ export function MatchPage() {
         <button role="tab" aria-selected={tab === 'live'} className={tab === 'live' ? 'on' : ''} onClick={() => setParams({})}>
           {t('matches.tabLive')}
         </button>
+        <button role="tab" aria-selected={tab === 'stats'} className={tab === 'stats' ? 'on' : ''} onClick={() => setParams({ tab: 'stats' })}>
+          {t('matches.tabStats')}
+        </button>
         <button
           role="tab"
           aria-selected={tab === 'roster'}
@@ -91,8 +97,10 @@ export function MatchPage() {
             </button>
           </div>
         ) : (
-          <LiveScoring m={m} />
+          <LiveScoring m={m} clipFilter={params.get('clip')} />
         )
+      ) : tab === 'stats' ? (
+        <MatchStatsView m={m} onShowClips={(f) => setParams({ clip: filterToParam(f) })} />
       ) : (
         <RosterEditor m={m} />
       )}

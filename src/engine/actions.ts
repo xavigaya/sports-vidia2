@@ -87,3 +87,25 @@ export function actionCode(a: Action): string {
   const zones = a.startZone || a.endZone ? `${a.startZone ?? '~'}${a.endZone ?? '~'}` : '';
   return `${team}${num}${a.skill}${a.skillType ?? ''}${a.evaluation}${zones}`;
 }
+
+// Parelles d'accions complementàries: la segona descriu la mateixa jugada
+// des del punt de vista de l'altre equip i no suma un altre punt.
+//   S# ↔ R=   (ace / error de recepció)
+//   A# ↔ B=, D=   (atac guanyador / bloqueig fora o error de defensa)
+//   A/ ↔ B#   (atac bloquejat / punt de bloqueig)
+const COMPLEMENTS: Record<string, string[]> = {
+  'S#': ['R='],
+  'R=': ['S#'],
+  'A#': ['B=', 'D='],
+  'B=': ['A#'],
+  'D=': ['A#'],
+  'A/': ['B#'],
+  'B#': ['A/'],
+};
+
+export function isComplement(
+  closing: Pick<Action, 'skill' | 'evaluation'>,
+  next: Pick<Action, 'skill' | 'evaluation'>,
+): boolean {
+  return COMPLEMENTS[`${closing.skill}${closing.evaluation}`]?.includes(`${next.skill}${next.evaluation}`) ?? false;
+}

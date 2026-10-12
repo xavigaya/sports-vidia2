@@ -46,7 +46,17 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 - Vídeos filtrats per equip, jugador, set, fonament, qualificació o accions de punt, amb marge abans i després configurable i reproducció seguida.
 - Controls tàctils i dreceres de teclat (Ctrl+Espai, Ctrl+←/→).
 
-**Properes fases**: estadístiques; importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
+**Fase 5 — Estadístiques**
+
+- Pestanya d'estadístiques a cada partit, per a tot el partit o per set.
+- Resum per equip: punts i el seu origen (aces, atac, bloqueig, errors del rival), side-out, break-point, eficàcia de servei, recepció positiva i atac.
+- Taula per jugador: servei, recepció, atac, bloqueig, col·locació, defensa i free ball, amb punts, errors i eficàcies.
+- Side-out i break-point per rotació (posició del col·locador).
+- Mapa de zones d'origen i destinació per fonament i jugador.
+- Des de cada número de la taula s'obren les jugades corresponents al vídeo.
+- Estadístiques acumulades d'un equip per temporada i partits seleccionats.
+
+**Properes fases**: importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
 
 ## Tecnologia
 
@@ -108,5 +118,6 @@ src/players/           Jugadors
 src/engine/            Motor de partit (regles, rotacions, marcador) i codis
 src/matches/           Partits, convocatòria i marcador en directe
 src/video/             Reproductor (YouTube i local), sincronització i vídeos filtrats
+src/stats/             Càlcul i presentació d'estadístiques
 src/i18n/              Traduccions (ca.json és la referència)
 ```

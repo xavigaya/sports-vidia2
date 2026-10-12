@@ -585,3 +585,58 @@ h3 { margin: 0; font-size: 1rem; }
 }
 .auto-pause { gap: 12px; }
 .auto-pause .num-input { width: 64px; min-height: 32px; padding: 2px 6px; }
+
+/* =====================================================================
+   Estadístiques (fase 5)
+   ===================================================================== */
+.match-stats .segmented { flex-wrap: wrap; }
+.summaries { align-items: stretch; }
+.team-summary { border-top: 4px solid var(--team); display: flex; flex-direction: column; gap: 12px; }
+.ts-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ts-sets { font-size: 1.4rem; font-weight: 800; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.kpi { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--surface-2); border-radius: 8px; }
+.kpi-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.kpi-value { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.kpi-sub { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.points-table th { font-weight: 600; color: var(--muted); font-size: 0.82rem; text-transform: none; letter-spacing: 0; }
+
+.stats-table { font-size: 0.88rem; }
+.stats-table th, .stats-table td { padding: 6px 6px; white-space: nowrap; }
+.stats-table .group-row th { text-align: center; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
+.stats-table .group-row th + th { border-left: 1px solid var(--line); }
+.num-cell { text-align: right; font-variant-numeric: tabular-nums; }
+.stats-table .name-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.stats-table .strong { font-weight: 800; }
+.stats-table .zero { color: var(--muted); opacity: 0.6; }
+.stats-table tbody tr:hover { background: var(--surface-2); }
+.total-row td { font-weight: 700; border-top: 2px solid var(--text); }
+.cell-link {
+  font: inherit; font-variant-numeric: tabular-nums; color: var(--brand); background: none; border: 0; padding: 2px 4px;
+  min-width: 28px; min-height: 28px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; border-radius: 4px;
+}
+.cell-link:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+@media (prefers-color-scheme: dark) { .cell-link { color: #86b6ef; } }
+.rotation-table { max-width: 420px; }
+
+.zone-map select { width: auto; }
+.zm-court { max-width: 360px; }
+.zm-net { text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); border-bottom: 4px solid var(--text); padding-bottom: 2px; margin-bottom: 4px; }
+.zm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.zm-cell {
+  position: relative; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #15191f;
+}
+.zm-cell.dark { color: #fff; }
+.zm-zone { position: absolute; top: 3px; left: 6px; font-size: 0.7rem; font-weight: 700; opacity: 0.7; }
+.zm-n { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.zm-pct, .zm-detail { font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+@media (prefers-color-scheme: dark) { .zm-cell:not([style*="background: transparent"]) { border-color: transparent; } .zm-cell[style*="background: transparent"] { color: var(--text); } }
+
+.match-picker summary { cursor: pointer; font-weight: 700; min-height: 32px; display: flex; align-items: center; }
+.picker-actions { margin: 10px 0 6px; gap: 6px; }
+.picker-list { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
+.picker-list .check { gap: 10px; min-height: 40px; }
+@media (max-width: 860px) {
+  .nav a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

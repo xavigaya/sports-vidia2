@@ -14,7 +14,7 @@
 // =====================================================================
 
 import { other, type Side } from './side';
-import { pointWinner, type Action } from './actions';
+import { isComplement, pointWinner, type Action, type Evaluation, type Skill } from './actions';
 
 export { other, type Side };
 
@@ -112,7 +112,7 @@ export interface MatchState {
   notices: string[];
   // Acció que acaba de tancar la jugada (per acceptar-ne la complementària:
   // S# + R=, A# + B=, A/ + B#… sense sumar el punt dues vegades)
-  closing: { winner: Side; side: Side } | null;
+  closing: { winner: Side; side: Side; skill: Skill; evaluation: Evaluation } | null;
 }
 
 export type EngineErrorCode =
@@ -239,7 +239,7 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
   s.closing = null;
 
   // Acció complementària de la que ha tancat la jugada: es registra sense nou punt
-  if (ev.type === 'action' && closing && ev.side !== closing.side && pointWinner(ev) === closing.winner) {
+  if (ev.type === 'action' && closing && ev.side !== closing.side && isComplement(closing, ev)) {
     checkRoster(s.rosters?.[ev.side], ev.player);
     s.notices.push('complement');
     return s;
@@ -310,7 +310,7 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
       const winner = pointWinner(ev);
       if (winner) {
         awardPoint(s, winner);
-        s.closing = { winner, side: ev.side };
+        s.closing = { winner, side: ev.side, skill: ev.skill, evaluation: ev.evaluation };
       }
       return s;
     }

@@ -70,3 +70,12 @@ describe('pausa automàtica', () => {
     expect(clampDelay(Number.NaN)).toBe(1);
   });
 });
+
+describe('filtre a l’URL', () => {
+  test('anada i tornada', async () => {
+    const { filterToParam, paramToFilter } = await import('./clips');
+    const f = paramToFilter(filterToParam({ side: 'A', player: 7, skills: ['A'], evaluations: ['='], set: 2 }));
+    expect(f).toEqual({ side: 'A', player: 7, skills: ['A'], evaluations: ['='], set: 2, pointsOnly: false });
+    expect(paramToFilter('no-json')).toBeNull();
+  });
+});

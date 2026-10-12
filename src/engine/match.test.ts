@@ -500,3 +500,28 @@ describe('deducció de l’equip i qualificació per defecte', () => {
     expect(eventCode({ type: 'point', side: 'A', error: true })).toBe('*e');
   });
 });
+
+describe('accions complementàries: només parelles reals', () => {
+  test('després d’un error de servei del rival, un ace sí que suma', () => {
+    // H serveix i el visitant guanya el punt; després el visitant falla el servei
+    let s = apply(
+      start('H'),
+      { type: 'action', side: 'H', player: 1, skill: 'S', evaluation: '+' } as MatchEventData,
+      { type: 'action', side: 'A', player: 12, skill: 'A', evaluation: '#' } as MatchEventData,
+      { type: 'action', side: 'A', player: 12, skill: 'S', evaluation: '=' } as MatchEventData,
+    );
+    expect(s.score).toEqual({ H: 1, A: 1 });
+    s = apply(s, { type: 'action', side: 'H', player: 2, skill: 'S', evaluation: '#' } as MatchEventData);
+    expect(s.score).toEqual({ H: 2, A: 1 });
+  });
+
+  test('atac guanyador i error de defensa: un sol punt', () => {
+    const s = apply(
+      start('H'),
+      { type: 'action', side: 'H', player: 1, skill: 'S', evaluation: '+' } as MatchEventData,
+      { type: 'action', side: 'A', player: 12, skill: 'A', evaluation: '#' } as MatchEventData,
+      { type: 'action', side: 'H', player: 5, skill: 'D', evaluation: '=' } as MatchEventData,
+    );
+    expect(s.score).toEqual({ H: 0, A: 1 });
+  });
+});

@@ -13,6 +13,7 @@ interface Props {
   playerRef: RefObject<PlayerHandle | null>;
   names: Record<SideCode, string>;
   players: Record<SideCode, Map<number, MatchPlayer>>;
+  initialFilter?: ClipFilter | null;
 }
 
 const MARGIN_KEY = 'svidia.clipMargins';
@@ -28,9 +29,14 @@ function readMargins(): { pre: number; post: number } {
 }
 
 // Vídeos filtrats: llista de talls i reproducció seguida
-export function ClipsPanel({ events, rules, playerRef, names, players }: Props) {
+export function ClipsPanel({ events, rules, playerRef, names, players, initialFilter }: Props) {
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<ClipFilter>(EMPTY_FILTER);
+  const [filter, setFilter] = useState<ClipFilter>(initialFilter ?? EMPTY_FILTER);
+  // Filtre que arriba des de les estadístiques
+  const initialKey = initialFilter ? JSON.stringify(initialFilter) : '';
+  useEffect(() => {
+    if (initialKey) setFilter(JSON.parse(initialKey) as ClipFilter);
+  }, [initialKey]);
   const [margins, setMargins] = useState(readMargins);
   const [current, setCurrent] = useState<number | null>(null); // índex del tall en reproducció
   const [playlist, setPlaylist] = useState(false); // reproduint tots seguits
