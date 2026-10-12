@@ -27,6 +27,7 @@ export function Legend() {
           <li>{t('legend.partEnd')}</li>
         </ol>
         <p className="small muted">{t('legend.defaults')}</p>
+        <p className="small">{t('legend.doubleSigns')}</p>
       </section>
 
       <section>

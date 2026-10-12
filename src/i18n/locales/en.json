@@ -379,7 +379,8 @@
     "ex2": "perfect reception by away player 7",
     "ex3": "set by 3 and winning quick attack by away 11, from zone 3 to 8",
     "ex4": "serve error by home 12 (point for away)",
-    "ex5": "full rally: the block by away 2 wins the point"
+    "ex5": "full rally: the block by away 2 wins the point",
+    "doubleSigns": "You can also type ++ instead of # and -- instead of = (they are saved as # and =)."
   },
   "code": {
     "pickPlayer": "Tap a player on court (or choose Serve)",

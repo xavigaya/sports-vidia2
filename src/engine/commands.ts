@@ -10,6 +10,7 @@
 //     4A#         sense prefix: equip local (excepte S i R, vegeu sota)
 //     S+          servei sense dorsal: el fa qui és a la posició I de l'equip que serveix
 //     5R-         recepció sense prefix: equip que rep
+//     7A++        "++" s'enregistra com a "#", i "--" com a "="
 //
 // Marcador:
 //     *p / ap     punt local / visitant
@@ -47,7 +48,10 @@ export type ParseResult =
   | { ok: false; error: ParseError; token: string };
 
 const PAIR = /^(\d{1,2})[:.](\d{1,2})$/;
-const ACTION = /^(\d{1,2})?([SREABDF])([HMQTUFO])?([#+!\-/=])([1-9~])?([1-9~])?$/i;
+// Qualificació: # + ! - / =  (també "++" equival a "#" i "--" equival a "=")
+const ACTION = /^(\d{1,2})?([SREABDF])([HMQTUFO])?(\+\+|--|[#+!\-/=])([1-9~])?([1-9~])?$/i;
+
+const EVAL_ALIASES: Record<string, Evaluation> = { '++': '#', '--': '=' };
 
 function parseToken(raw: string): ParsedToken | ParseError {
   let side: Side | null = null;
@@ -88,7 +92,7 @@ function parseToken(raw: string): ParsedToken | ParseError {
     player,
     skill,
     skillType: a[3] ? (a[3].toUpperCase() as SkillType) : null,
-    evaluation: a[4] as Evaluation,
+    evaluation: EVAL_ALIASES[a[4]] ?? (a[4] as Evaluation),
     startZone: zone(a[5]),
     endZone: zone(a[6]),
   };

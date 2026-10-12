@@ -379,7 +379,8 @@
     "ex2": "recepción perfecta del 7 visitante",
     "ex3": "colocación del 3 y ataque rápido ganador del 11 visitante, de la zona 3 a la 8",
     "ex4": "error de saque del 12 local (punto para el visitante)",
-    "ex5": "jugada completa: el bloqueo del 2 visitante suma el punto"
+    "ex5": "jugada completa: el bloqueo del 2 visitante suma el punto",
+    "doubleSigns": "También puedes escribir ++ en lugar de # y -- en lugar de = (se registran como # y =)."
   },
   "code": {
     "pickPlayer": "Toca un jugador en el campo (o elige Saque)",

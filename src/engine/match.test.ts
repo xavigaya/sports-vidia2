@@ -433,3 +433,14 @@ describe('accions complementàries', () => {
     expect(s.score).toEqual({ H: 2, A: 0 });
   });
 });
+
+describe('qualificacions dobles', () => {
+  test('++ equival a # i -- equival a =', () => {
+    const r = parseCommand('*7A++41 a3R-- S++ 5E- a2B+');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.events.map((e) => ('evaluation' in e ? e.evaluation : null))).toEqual(['#', '=', '#', '-', '+']);
+    const first = r.events[0];
+    expect(first).toMatchObject({ side: 'H', player: 7, skill: 'A', startZone: 4, endZone: 1 });
+  });
+});
