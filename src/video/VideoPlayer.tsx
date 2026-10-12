@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { loadYouTubeApi, type YTPlayer } from './youtube';
 
-export type VideoSource = { kind: 'youtube'; id: string } | { kind: 'file'; url: string; name: string };
+export type VideoSource = { kind: 'youtube'; id: string } | { kind: 'file'; url: string; name: string; file?: File };
 
 // API comuna per als dos tipus de vídeo
 export interface PlayerHandle {

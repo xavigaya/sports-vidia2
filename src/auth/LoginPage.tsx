@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { clearServerConfig, serverFromBuild, serverUrl, supabase } from '../lib/supabase';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ErrorBox } from '../components/ui';
 
@@ -88,6 +88,21 @@ export function LoginPage() {
 
         <div className="auth-footer">
           <LanguagePicker />
+          {!serverFromBuild && (
+            <button
+              type="button"
+              className="btn-link small"
+              title={serverUrl ?? ''}
+              onClick={() => {
+                if (window.confirm(t('app.serverChangeConfirm'))) {
+                  clearServerConfig();
+                  window.location.reload();
+                }
+              }}
+            >
+              {t('app.serverChange')}
+            </button>
+          )}
         </div>
       </div>
     </div>

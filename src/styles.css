@@ -662,3 +662,11 @@ h3 { margin: 0; font-size: 1rem; }
 @media (max-width: 860px) {
   .sync-status { top: 4px; padding: 4px 8px 0; }
 }
+
+/* =====================================================================
+   YouTube (fase 8)
+   ===================================================================== */
+.progress { height: 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.progress-bar { height: 100%; background: var(--brand); transition: width 0.3s; }
+.howto { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+textarea { font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; width: 100%; resize: vertical; }

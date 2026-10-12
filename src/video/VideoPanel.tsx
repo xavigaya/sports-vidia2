@@ -6,6 +6,7 @@ import { eventCode } from '../engine/commands';
 import { formatTime, parseYouTubeId } from './youtube';
 import { VideoPlayer, type PlayerHandle, type VideoSource } from './VideoPlayer';
 import { clampDelay, type AutoPause } from './autoPause';
+import { YouTubeUploadDialog } from './YouTubeUploadDialog';
 
 interface Props {
   m: UseMatch;
@@ -31,6 +32,7 @@ export function VideoPanel({ m, source, setSource, playerRef, autoPause, setAuto
   const [rate, setRate] = useState(1);
   const [syncOpen, setSyncOpen] = useState(false);
   const [changing, setChanging] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const p = () => playerRef.current;
   const skip = useCallback((d: number) => {
@@ -72,7 +74,7 @@ export function VideoPanel({ m, source, setSource, playerRef, autoPause, setAuto
   function onFile(f: File) {
     if (source?.kind === 'file') URL.revokeObjectURL(source.url);
     setError(null);
-    setSource({ kind: 'file', url: URL.createObjectURL(f), name: f.name });
+    setSource({ kind: 'file', url: URL.createObjectURL(f), name: f.name, file: f });
     setChanging(false);
     if (m.canCode) void m.saveVideo({ video_local_name: f.name, video_url: null });
   }
@@ -164,6 +166,11 @@ export function VideoPanel({ m, source, setSource, playerRef, autoPause, setAuto
             {t('video.sync')}
           </button>
         )}
+        {m.canCode && source.kind === 'file' && source.file && (
+          <button className="btn btn-sm" onClick={() => setUploadOpen(true)} title={t('youtube.uploadHelp')}>
+            ⤒ YouTube
+          </button>
+        )}
         <button className="btn btn-sm" onClick={() => setChanging(true)}>
           {t('video.change')}
         </button>
@@ -197,6 +204,12 @@ export function VideoPanel({ m, source, setSource, playerRef, autoPause, setAuto
       )}
       {source.kind === 'file' && <div className="small muted">{source.name}</div>}
       {error && <div className="error-box">{error}</div>}
+
+      {source.kind === 'file' && source.file && (
+        <Modal title={t('youtube.uploadTitle')} open={uploadOpen} onClose={() => setUploadOpen(false)}>
+          <YouTubeUploadDialog m={m} file={source.file} onClose={() => setUploadOpen(false)} />
+        </Modal>
+      )}
 
       <Modal title={t('video.sync')} open={syncOpen} onClose={() => setSyncOpen(false)}>
         <SyncForm m={m} playerRef={playerRef} onDone={() => setSyncOpen(false)} />

@@ -79,3 +79,13 @@ describe('filtre a l’URL', () => {
     expect(paramToFilter('no-json')).toBeNull();
   });
 });
+
+describe('llista de YouTube', () => {
+  test('accepta l’ID o l’enllaç', async () => {
+    const { parsePlaylistId } = await import('./youtubeUpload');
+    expect(parsePlaylistId('https://www.youtube.com/playlist?list=PLabc123DEF456')).toBe('PLabc123DEF456');
+    expect(parsePlaylistId('PLabc123DEF456')).toBe('PLabc123DEF456');
+    expect(parsePlaylistId('')).toBeNull();
+    expect(parsePlaylistId('hola que tal')).toBeNull();
+  });
+});

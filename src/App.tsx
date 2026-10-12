@@ -15,7 +15,9 @@ import { TeamStatsPage } from './stats/TeamStatsPage';
 import { PlayersPage } from './players/PlayersPage';
 import { TeamDetailPage } from './teams/TeamDetailPage';
 import { TeamsPage } from './teams/TeamsPage';
-import { supabaseConfigured } from './lib/supabase';
+import { saveServerConfig, supabaseConfigured } from './lib/supabase';
+import { useState, type FormEvent } from 'react';
+import { BallMark } from './auth/LoginPage';
 
 // HashRouter: funciona igual al navegador, dins Tauri i dins Capacitor.
 export default function App() {
@@ -65,12 +67,42 @@ function ClubGate() {
 
 function NotConfigured() {
   const { t } = useTranslation();
+  const [url, setUrl] = useState('');
+  const [key, setKey] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!/^https:\/\/[^/]+/.test(url.trim())) {
+      setError(t('app.serverBadUrl'));
+      return;
+    }
+    saveServerConfig({ url, key });
+    window.location.reload();
+  }
+
   return (
     <div className="auth-screen">
-      <div className="auth-card card">
-        <h1>{t('app.notConfiguredTitle')}</h1>
-        <p>{t('app.notConfiguredBody')}</p>
-      </div>
+      <form className="auth-card card stack" onSubmit={onSubmit}>
+        <div className="auth-brand">
+          <BallMark />
+          <div>
+            <h1>{t('app.notConfiguredTitle')}</h1>
+            <p className="muted">{t('app.name')}</p>
+          </div>
+        </div>
+        <p className="small">{t('app.serverHelp')}</p>
+        <label className="field">
+          <span>{t('app.serverUrl')}</span>
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://xxxxxxxx.supabase.co" required autoComplete="off" />
+        </label>
+        <label className="field">
+          <span>{t('app.serverKey')}</span>
+          <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="sb_publishable_…" required autoComplete="off" />
+        </label>
+        {error && <div className="error-box">{error}</div>}
+        <button className="btn btn-primary btn-lg">{t('app.serverSave')}</button>
+      </form>
     </div>
   );
 }

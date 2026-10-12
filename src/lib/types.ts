@@ -17,6 +17,9 @@ export interface Club {
   default_language: string;
   max_substitutions: number;
   timeouts_per_set: number;
+  youtube_client_id?: string | null;
+  youtube_playlist_id?: string | null;
+  youtube_privacy?: 'private' | 'unlisted' | 'public';
   created_at: string;
 }
 

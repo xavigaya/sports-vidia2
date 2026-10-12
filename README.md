@@ -72,13 +72,19 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 
 Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir (amb connexió) perquè quedi desat al dispositiu. Els partits nous s'han de crear amb connexió.
 
-**Properes fases**: versions d'escriptori i Android; pujada de vídeos a YouTube.
+**Fase 8 — Aplicacions i YouTube**
+
+- Aplicació d'escriptori per a Windows (`.msi`, `.exe`) i Linux (`.deb`, `.rpm`, `.AppImage`) amb Tauri.
+- Aplicació per a tauletes Android (`.apk`) amb Capacitor.
+- Les aplicacions es compilen soles a GitHub en publicar una versió (etiqueta `v…`) i queden a la pàgina *Releases*.
+- La primera vegada, l'aplicació demana l'adreça i la clau pública del servidor Supabase (o es poden incloure a la compilació amb les variables `SUPABASE_URL` i `SUPABASE_ANON_KEY` del repositori).
+- Pujada de vídeos locals al canal de YouTube del club, amb llista de reproducció i visibilitat configurables, pujada reprenible amb progrés i comprovació dels consentiments d'imatge dels menors. Es fa des de la versió web.
 
 ## Tecnologia
 
 - React + TypeScript + Vite (una sola base de codi per a totes les plataformes).
 - Supabase (PostgreSQL, usuaris, emmagatzematge) amb seguretat a nivell de fila per aïllar cada club.
-- Més endavant: Tauri (Windows/Linux) i Capacitor (Android).
+- Tauri (Windows/Linux) i Capacitor (Android) per a les aplicacions instal·lables.
 
 ## Posada en marxa
 
@@ -114,6 +120,22 @@ npm install
 
 Si la versió nova porta un fitxer nou a `supabase/migrations/`, executa'l a l'SQL Editor de Supabase.
 
+### 4. Aplicacions instal·lables
+
+Descarrega-les de la pàgina **Releases** del repositori de GitHub:
+
+- **Windows**: executa el `.msi` o el `.exe`. Com que no està signada, Windows pot mostrar l'avís «Windows ha protegit l'ordinador»: *Més informació → Executa igualment*.
+- **Linux**: `sudo apt install ./Sports.VidIA_*.deb` (Ubuntu, Debian, Linkat) o fes executable l'`.AppImage`.
+- **Android**: copia l'`.apk` a la tauleta i obre'l; cal permetre instal·lar aplicacions de fonts desconegudes.
+
+Per compilar-les tu mateix: `npm run desktop:build` (cal [Rust](https://rustup.rs) i les dependències de Tauri) o, per a Android, `npm run build && npx cap add android && npx cap open android` (cal Android Studio).
+
+Per publicar una versió nova: `git tag v0.8.1 && git push --tags`.
+
+### 5. YouTube
+
+A **Configuració** del club hi ha els passos per crear l'ID de client OAuth de Google i indicar la llista de reproducció. Mentre el projecte de Google no estigui verificat, YouTube deixa els vídeos pujats en privat; la visibilitat es pot canviar després a YouTube Studio.
+
 ## Protecció de dades
 
 Dels jugadors només es guarda el que cal per a l'estadística: nom, cognoms, àlies opcional, dorsal i posició. No es desa ni data de naixement, ni dades de contacte, ni fotos. Cada jugador té dues marques:
@@ -137,5 +159,7 @@ src/video/             Reproductor (YouTube i local), sincronització i vídeos 
 src/stats/             Càlcul i presentació d'estadístiques, exportació a Excel
 src/dvw/               Lectura i escriptura de fitxers DataVolley
 src/offline/           Còpia local, cua de canvis pendents i sincronització
+src-tauri/             Aplicació d'escriptori (Tauri)
+assets/                Icones i pantalla d'inici d'Android
 src/i18n/              Traduccions (ca.json és la referència)
 ```

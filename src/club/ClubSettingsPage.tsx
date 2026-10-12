@@ -5,6 +5,7 @@ import { useClub, useCurrentClub } from './ClubProvider';
 import { LANGUAGES } from '../i18n';
 import { ErrorBox, PageHeader } from '../components/ui';
 import { applyClubTheme } from './theme';
+import { parsePlaylistId } from '../video/youtubeUpload';
 import type { Club } from '../lib/types';
 
 export function ClubSettingsPage() {
@@ -43,6 +44,9 @@ export function ClubSettingsPage() {
         default_language: form.default_language,
         max_substitutions: form.max_substitutions,
         timeouts_per_set: form.timeouts_per_set,
+        youtube_client_id: form.youtube_client_id?.trim() || null,
+        youtube_playlist_id: form.youtube_playlist_id ? parsePlaylistId(form.youtube_playlist_id) : null,
+        youtube_privacy: form.youtube_privacy ?? 'unlisted',
       })
       .eq('id', club.id);
     setBusy(false);
@@ -156,6 +160,47 @@ export function ClubSettingsPage() {
               />
             </label>
           </div>
+
+          <h2>{t('youtube.title')}</h2>
+          <p className="small muted">{t('youtube.settingsHelp')}</p>
+          <div className="grid-2">
+            <label className="field">
+              <span>{t('youtube.clientId')}</span>
+              <input
+                value={form.youtube_client_id ?? ''}
+                onChange={(e) => set('youtube_client_id', e.target.value)}
+                placeholder="123456789-xxxx.apps.googleusercontent.com"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span>{t('youtube.playlist')}</span>
+              <input
+                value={form.youtube_playlist_id ?? ''}
+                onChange={(e) => set('youtube_playlist_id', e.target.value)}
+                placeholder="https://www.youtube.com/playlist?list=PL…"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span>{t('youtube.privacy')}</span>
+              <select value={form.youtube_privacy ?? 'unlisted'} onChange={(e) => set('youtube_privacy', e.target.value as Club['youtube_privacy'])}>
+                <option value="unlisted">{t('youtube.unlisted')}</option>
+                <option value="private">{t('youtube.private')}</option>
+                <option value="public">{t('youtube.public')}</option>
+              </select>
+            </label>
+          </div>
+          <details className="small">
+            <summary>{t('youtube.howTo')}</summary>
+            <ol className="howto">
+              <li>{t('youtube.step1')}</li>
+              <li>{t('youtube.step2')}</li>
+              <li>{t('youtube.step3')}</li>
+              <li>{t('youtube.step4', { origin: window.location.origin })}</li>
+              <li>{t('youtube.step5')}</li>
+            </ol>
+          </details>
 
           {error && <ErrorBox message={error} />}
           {isAdmin && (
