@@ -448,7 +448,9 @@
     "syncHelp": "If you coded the match without video (e.g. live), move the video to the exact moment of one of the actions (it is now at {{time}}) and choose it from the list. The other actions are placed according to the time they were coded.",
     "syncOnlyMissing": "Only actions that have no time yet",
     "goTo": "Show this play in the video",
-    "setTime": "Set the current video time on this action"
+    "setTime": "Set the current video time on this action",
+    "autoPause": "Pause the video while typing codes",
+    "autoPauseResume": "Resume after"
   },
   "clips": {
     "title": "Filtered video",

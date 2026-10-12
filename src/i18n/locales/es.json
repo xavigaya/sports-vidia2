@@ -448,7 +448,9 @@
     "syncHelp": "Si has codificado el partido sin vídeo (por ejemplo, en directo), pon el vídeo en el instante exacto de una de las acciones (ahora está en {{time}}) y elígela en la lista. El resto de acciones se colocarán según la hora en que se codificaron.",
     "syncOnlyMissing": "Solo las acciones que aún no tienen instante",
     "goTo": "Mostrar la jugada en el vídeo",
-    "setTime": "Asignar el instante actual del vídeo a esta acción"
+    "setTime": "Asignar el instante actual del vídeo a esta acción",
+    "autoPause": "Pausar el vídeo mientras escribo códigos",
+    "autoPauseResume": "Reanudar después de"
   },
   "clips": {
     "title": "Vídeos filtrados",

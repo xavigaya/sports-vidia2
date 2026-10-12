@@ -26,6 +26,7 @@ import { VideoPanel, sourceFromMatch } from '../video/VideoPanel';
 import { ClipsPanel } from '../video/ClipsPanel';
 import type { PlayerHandle, VideoSource } from '../video/VideoPlayer';
 import { formatTime } from '../video/youtube';
+import { readAutoPause, writeAutoPause, type AutoPause } from '../video/autoPause';
 
 const SIDES: Side[] = ['H', 'A'];
 
@@ -74,6 +75,34 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const playerRef = useRef<PlayerHandle | null>(null);
   const [source, setSource] = useState<VideoSource | null>(() => sourceFromMatch(match.video_url));
   const videoTime = useCallback(() => (source ? (playerRef.current?.getTime() ?? null) : null), [source]);
+  // Pausa automàtica mentre s'escriu a la línia d'ordres
+  const [autoPause, setAutoPauseState] = useState<AutoPause>(readAutoPause);
+  const setAutoPause = (v: AutoPause) => {
+    setAutoPauseState(v);
+    writeAutoPause(v);
+  };
+  const autoPaused = useRef(false);
+  const resumeTimer = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    },
+    [],
+  );
+  const onTyping = () => {
+    const p = playerRef.current;
+    if (!source || !autoPause.enabled || !p) return;
+    if (p.isPlaying()) {
+      p.pause();
+      autoPaused.current = true;
+    }
+    if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => {
+      // Només es reprèn si l'havíem aturat nosaltres
+      if (autoPaused.current) playerRef.current?.play();
+      autoPaused.current = false;
+    }, autoPause.delay * 1000);
+  };
   const seekTo = (time: number | null | undefined) => {
     if (time == null || !playerRef.current) return;
     playerRef.current.seek(time - 3);
@@ -168,7 +197,14 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   return (
     <div className={`live-layout ${source ? 'with-video' : ''}`}>
       <div className="live-video">
-        <VideoPanel m={m} source={source} setSource={setSource} playerRef={playerRef} />
+        <VideoPanel
+          m={m}
+          source={source}
+          setSource={setSource}
+          playerRef={playerRef}
+          autoPause={autoPause}
+          setAutoPause={setAutoPause}
+        />
         {source && <ClipsPanel events={m.events} rules={state.rules} playerRef={playerRef} names={names} players={playerMaps} />}
       </div>
     <div className="live">
@@ -300,7 +336,11 @@ export function LiveScoring({ m }: { m: UseMatch }) {
               className="mono cmd-input"
               value={command}
               onChange={(e) => setCommand(e.target.value)}
-              onKeyDown={(e) => e.key === 'Escape' && setCommand('')}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setCommand('');
+                // Les dreceres amb Ctrl (vídeo, desfer) no compten com a escriure
+                if (!e.ctrlKey && !e.metaKey && !e.altKey) onTyping();
+              }}
               placeholder={t('live.cmdPlaceholder')}
               aria-label={t('live.cmdLabel')}
               autoComplete="off"

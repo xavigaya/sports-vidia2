@@ -5,12 +5,15 @@ import type { UseMatch } from '../matches/useMatch';
 import { eventCode } from '../engine/commands';
 import { formatTime, parseYouTubeId } from './youtube';
 import { VideoPlayer, type PlayerHandle, type VideoSource } from './VideoPlayer';
+import { clampDelay, type AutoPause } from './autoPause';
 
 interface Props {
   m: UseMatch;
   source: VideoSource | null;
   setSource: (s: VideoSource | null) => void;
   playerRef: RefObject<PlayerHandle | null>;
+  autoPause: AutoPause;
+  setAutoPause: (v: AutoPause) => void;
 }
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -20,7 +23,7 @@ export function sourceFromMatch(url: string | null | undefined): VideoSource | n
   return id ? { kind: 'youtube', id } : null;
 }
 
-export function VideoPanel({ m, source, setSource, playerRef }: Props) {
+export function VideoPanel({ m, source, setSource, playerRef, autoPause, setAutoPause }: Props) {
   const { t } = useTranslation();
   const match = m.match!;
   const [url, setUrl] = useState(match.video_url ?? '');
@@ -165,6 +168,33 @@ export function VideoPanel({ m, source, setSource, playerRef }: Props) {
           {t('video.change')}
         </button>
       </div>
+      {m.canCode && (
+        <div className="row wrap small auto-pause">
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={autoPause.enabled}
+              onChange={(e) => setAutoPause({ ...autoPause, enabled: e.target.checked })}
+            />
+            {t('video.autoPause')}
+          </label>
+          <label className="row">
+            {t('video.autoPauseResume')}
+            <input
+              type="number"
+              min={0.3}
+              max={10}
+              step={0.1}
+              value={autoPause.delay}
+              disabled={!autoPause.enabled}
+              onChange={(e) => setAutoPause({ ...autoPause, delay: clampDelay(Number(e.target.value)) })}
+              className="num-input"
+              aria-label={t('video.autoPauseResume')}
+            />
+            s
+          </label>
+        </div>
+      )}
       {source.kind === 'file' && <div className="small muted">{source.name}</div>}
       {error && <div className="error-box">{error}</div>}
 

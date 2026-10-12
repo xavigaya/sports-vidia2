@@ -59,3 +59,14 @@ describe('talls de vídeo', () => {
     expect(c.find((x) => x.seq === 6)).toMatchObject({ scoreH: 0, scoreA: 1 });
   });
 });
+
+describe('pausa automàtica', () => {
+  test('el retard es limita entre 0,3 i 10 s', async () => {
+    const { clampDelay } = await import('./autoPause');
+    expect(clampDelay(1)).toBe(1);
+    expect(clampDelay(0)).toBe(0.3);
+    expect(clampDelay(25)).toBe(10);
+    expect(clampDelay(1.26)).toBe(1.3);
+    expect(clampDelay(Number.NaN)).toBe(1);
+  });
+});

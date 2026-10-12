@@ -88,7 +88,8 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
       isPlaying() {
         if (source.kind === 'file') return !!videoRef.current && !videoRef.current.paused;
         try {
-          return ytReady && yt.current?.getPlayerState() === 1;
+          const st = yt.current?.getPlayerState();
+          return ytReady && (st === 1 || st === 3); // reproduint o carregant
         } catch {
           return false;
         }

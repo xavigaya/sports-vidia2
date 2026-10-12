@@ -448,7 +448,9 @@
     "syncHelp": "Si has codificat el partit sense vídeo (per exemple, en directe), posa el vídeo a l’instant exacte d’una de les accions (ara és a {{time}}) i tria-la a la llista. La resta d’accions es col·locaran segons l’hora en què es van codificar.",
     "syncOnlyMissing": "Només les accions que encara no tenen instant",
     "goTo": "Mostra la jugada al vídeo",
-    "setTime": "Assigna l’instant actual del vídeo a aquesta acció"
+    "setTime": "Assigna l’instant actual del vídeo a aquesta acció",
+    "autoPause": "Pausa el vídeo mentre escric codis",
+    "autoPauseResume": "Reprèn després de"
   },
   "clips": {
     "title": "Vídeos filtrats",
