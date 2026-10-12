@@ -1,7 +1,7 @@
 // Cua persistent de canvis pendents i sincronització amb el servidor
 import { supabase } from '../lib/supabase';
 import { kvGet, kvSet, isNetworkError } from './store';
-import { enqueueOp, type Op } from './queue';
+import { enqueueOp, type NewOp, type Op } from './queue';
 
 const KEY = 'outbox';
 let ops: Op[] = [];
@@ -44,7 +44,7 @@ export function currentOps(): Op[] {
 
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
 
-export async function enqueue(op: Omit<Op, 'id'>): Promise<void> {
+export async function enqueue(op: NewOp): Promise<void> {
   await load();
   ops = enqueueOp(ops, { ...op, id: newId() } as Op);
   await save();

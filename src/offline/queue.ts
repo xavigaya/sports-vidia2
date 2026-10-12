@@ -19,6 +19,9 @@ export type Op =
   | { id: string; kind: 'event_time'; matchId: string; seq: number; time: number | null; error?: string }
   | { id: string; kind: 'match_update'; matchId: string; patch: Record<string, unknown>; error?: string };
 
+// Operació nova (sense identificador), conservant la distinció per tipus
+export type NewOp = { [K in Op['kind']]: Omit<Extract<Op, { kind: K }>, 'id'> }[Op['kind']];
+
 // Afegeix una operació simplificant la cua:
 //  - esborrar un esdeveniment encara no enviat → desapareixen tots dos
 //  - canviar l'instant d'un esdeveniment no enviat → es modifica la inserció
