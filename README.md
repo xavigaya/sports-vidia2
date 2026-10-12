@@ -76,7 +76,7 @@ Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir
 
 - Aplicació d'escriptori per a Windows (`.msi`, `.exe`) i Linux (`.deb`, `.rpm`, `.AppImage`) amb Tauri.
 - Aplicació per a tauletes Android (`.apk`) amb Capacitor.
-- Les aplicacions es compilen soles a GitHub en publicar una versió (etiqueta `v…`) i queden a la pàgina *Releases*.
+- Les aplicacions es compilen soles a GitHub quan canvia la versió de `package.json` a la branca `main` (o amb una etiqueta `v…`) i queden a la pàgina *Releases*.
 - La primera vegada, l'aplicació demana l'adreça i la clau pública del servidor Supabase (o es poden incloure a la compilació amb les variables `SUPABASE_URL` i `SUPABASE_ANON_KEY` del repositori).
 - Pujada de vídeos locals al canal de YouTube del club, amb llista de reproducció i visibilitat configurables, pujada reprenible amb progrés i comprovació dels consentiments d'imatge dels menors. Es fa des de la versió web.
 
@@ -130,7 +130,7 @@ Descarrega-les de la pàgina **Releases** del repositori de GitHub:
 
 Per compilar-les tu mateix: `npm run desktop:build` (cal [Rust](https://rustup.rs) i les dependències de Tauri) o, per a Android, `npm run build && npx cap add android && npx cap open android` (cal Android Studio).
 
-Per publicar una versió nova: `git tag v0.8.1 && git push --tags`.
+Per publicar una versió nova: canvia `"version"` a `package.json` (p. ex. `0.8.1`) i puja-ho a `main`.
 
 ### 5. YouTube
 
