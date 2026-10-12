@@ -99,6 +99,9 @@ export function Legend() {
             <code>*p</code> / <code>ap</code> — {t('live.cmdHelp.point')}
           </li>
           <li>
+            <code>*e</code> / <code>ae</code> — {t('live.cmdHelp.error')}
+          </li>
+          <li>
             <code>*T</code> / <code>aT</code> — {t('live.cmdHelp.timeout')}
           </li>
           <li>

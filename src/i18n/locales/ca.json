@@ -219,7 +219,8 @@
       "timeout": "temps mort local / visitant",
       "sub": "canvi: surt el 3, entra el 13 (a = visitant)",
       "libero": "el líbero 10 entra pel 5 (o surt i torna el 5)",
-      "undo": "desfà l'última acció"
+      "undo": "desfà l'última acció",
+      "error": "error del local / visitant (punt per a l’altre equip)"
     },
     "log": "Registre",
     "logEmpty": "Encara no hi ha cap acció.",
@@ -237,7 +238,8 @@
       "point": "Punt {{team}}",
       "timeout": "Temps mort {{team}}",
       "sub": "{{team}}: surt {{out}}, entra {{in}}",
-      "libero": "{{team}}: líbero {{libero}} ↔ {{player}}"
+      "libero": "{{team}}: líbero {{libero}} ↔ {{player}}",
+      "error": "Error {{team}} · punt {{other}}"
     },
     "cmd": {
       "side": "El codi ha de començar per * (local) o a (visitant).",
@@ -253,7 +255,15 @@
     "autoLibero": "Líbero automàtic pels centrals",
     "autoLiberoMiddles": "Entra quan un central acaba de servir (centrals: {{list}}).",
     "autoLiberoNoMiddles": "Cap jugador convocat té la posició Central: marca-la a la plantilla.",
-    "defaultLibero": "Líbero per defecte"
+    "defaultLibero": "Líbero per defecte",
+    "rotateForward": "Rota",
+    "rotateForwardHelp": "Gira l’alineació com en un canvi de servei (II→I)",
+    "rotateBack": "Rota enrere",
+    "rotateBackHelp": "Desfà una rotació (I→II)",
+    "clearPositions": "Esborra",
+    "swapSidesShort": "Costats",
+    "error": "Error",
+    "errorHelp": "Error de {{team}}: punt per al rival"
   },
   "engine": {
     "needs_lineup": "Primer cal introduir l'alineació del set.",
@@ -357,14 +367,14 @@
   "legend": {
     "title": "Llegenda de codis",
     "structure": "Estructura d'un codi d'acció",
-    "partTeam": "Equip: * local, a visitant (si no s’indica: local; al servei, l’equip que serveix; a la recepció, l’equip que rep)",
+    "partTeam": "Equip: * local, a visitant (opcional; vegeu sota com es dedueix)",
     "partPlayer": "Dorsal (1 o 2 xifres; al servei es pot ometre)",
     "partSkill": "Fonament",
     "partType": "Tipus (opcional)",
-    "partEval": "Qualificació",
+    "partEval": "Qualificació (opcional; si no s’escriu, s’entén +)",
     "partStart": "Zona d’inici (opcional, 1–9 o ~)",
     "partEnd": "Zona final (opcional, 1–9)",
-    "defaults": "Es poden escriure diversos codis seguits separats per espais. Majúscules i minúscules indiferents.",
+    "defaults": "Es poden escriure diversos codis seguits separats per espais, en majúscules o minúscules. Si no s’indica l’equip: el servei és de l’equip que serveix; la recepció, de l’equip que rep; després d’un servei o d’un atac (que no sigui /), l’acció és de l’equip contrari; en els altres casos, del mateix equip de l’última acció.",
     "evalTitle": "Qualificacions per fonament",
     "pointFor": "Punt per a l’equip",
     "pointAgainst": "Punt per al rival",

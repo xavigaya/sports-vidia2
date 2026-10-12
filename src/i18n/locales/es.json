@@ -219,7 +219,8 @@
       "timeout": "tiempo muerto local / visitante",
       "sub": "cambio: sale el 3, entra el 13 (a = visitante)",
       "libero": "el líbero 10 entra por el 5 (o sale y vuelve el 5)",
-      "undo": "deshace la última acción"
+      "undo": "deshace la última acción",
+      "error": "error del local / visitante (punto para el otro equipo)"
     },
     "log": "Registro",
     "logEmpty": "Todavía no hay ninguna acción.",
@@ -237,7 +238,8 @@
       "point": "Punto {{team}}",
       "timeout": "Tiempo muerto {{team}}",
       "sub": "{{team}}: sale {{out}}, entra {{in}}",
-      "libero": "{{team}}: líbero {{libero}} ↔ {{player}}"
+      "libero": "{{team}}: líbero {{libero}} ↔ {{player}}",
+      "error": "Error {{team}} · punto {{other}}"
     },
     "cmd": {
       "side": "El código debe empezar por * (local) o a (visitante).",
@@ -253,7 +255,15 @@
     "autoLibero": "Líbero automático por los centrales",
     "autoLiberoMiddles": "Entra cuando un central acaba de sacar (centrales: {{list}}).",
     "autoLiberoNoMiddles": "Ningún jugador convocado tiene la posición Central: márcala en la plantilla.",
-    "defaultLibero": "Líbero por defecto"
+    "defaultLibero": "Líbero por defecto",
+    "rotateForward": "Rotar",
+    "rotateForwardHelp": "Gira la alineación como en un cambio de saque (II→I)",
+    "rotateBack": "Rotar atrás",
+    "rotateBackHelp": "Deshace una rotación (I→II)",
+    "clearPositions": "Borrar",
+    "swapSidesShort": "Lados",
+    "error": "Error",
+    "errorHelp": "Error de {{team}}: punto para el rival"
   },
   "engine": {
     "needs_lineup": "Primero hay que introducir la alineación del set.",
@@ -357,14 +367,14 @@
   "legend": {
     "title": "Leyenda de códigos",
     "structure": "Estructura de un código de acción",
-    "partTeam": "Equipo: * local, a visitante (si no se indica: local; en el saque, el equipo que saca; en la recepción, el que recibe)",
+    "partTeam": "Equipo: * local, a visitante (opcional; ver abajo cómo se deduce)",
     "partPlayer": "Dorsal (1 o 2 cifras; en el saque se puede omitir)",
     "partSkill": "Fundamento",
     "partType": "Tipo (opcional)",
-    "partEval": "Calificación",
+    "partEval": "Calificación (opcional; si no se escribe, se entiende +)",
     "partStart": "Zona de inicio (opcional, 1–9 o ~)",
     "partEnd": "Zona final (opcional, 1–9)",
-    "defaults": "Se pueden escribir varios códigos seguidos separados por espacios. Mayúsculas y minúsculas indiferentes.",
+    "defaults": "Se pueden escribir varios códigos seguidos separados por espacios, en mayúsculas o minúsculas. Si no se indica el equipo: el saque es del equipo que saca; la recepción, del equipo que recibe; después de un saque o de un ataque (que no sea /), la acción es del equipo contrario; en los demás casos, del mismo equipo de la última acción.",
     "evalTitle": "Calificaciones por fundamento",
     "pointFor": "Punto para el equipo",
     "pointAgainst": "Punto para el rival",

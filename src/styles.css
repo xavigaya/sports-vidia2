@@ -415,7 +415,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 .btn-point:active:not(:disabled) { transform: scale(0.98); }
-.action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.action-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.btn-error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
+.sb-swap { margin-top: 6px; min-height: 32px; }
+.lineup-tools { gap: 6px; }
 .command-bar { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 .cmd-input { font-size: 1.15rem; letter-spacing: 0.04em; flex: 1; }
 .toolbar { gap: 8px; }
@@ -467,7 +470,7 @@ h3 { margin: 0; font-size: 1rem; }
 }
 @media (max-width: 560px) {
   .actions { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .action-row { grid-template-columns: 1fr; }
+  .action-row { grid-template-columns: 1fr 1fr; }
   .lineup-grid select { font-size: 0.85rem; }
 }
 

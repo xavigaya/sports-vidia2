@@ -219,7 +219,8 @@
       "timeout": "home / away time-out",
       "sub": "sub: 3 out, 13 in (a = away)",
       "libero": "libero 10 in for 5 (or out, 5 returns)",
-      "undo": "undo the last action"
+      "undo": "undo the last action",
+      "error": "home / away error (point to the other team)"
     },
     "log": "Log",
     "logEmpty": "No actions yet.",
@@ -237,7 +238,8 @@
       "point": "Point {{team}}",
       "timeout": "Time-out {{team}}",
       "sub": "{{team}}: {{out}} out, {{in}} in",
-      "libero": "{{team}}: libero {{libero}} ↔ {{player}}"
+      "libero": "{{team}}: libero {{libero}} ↔ {{player}}",
+      "error": "{{team}} error · point {{other}}"
     },
     "cmd": {
       "side": "Codes start with * (home) or a (away).",
@@ -253,7 +255,15 @@
     "autoLibero": "Automatic libero for middle blockers",
     "autoLiberoMiddles": "Comes in when a middle has just served (middles: {{list}}).",
     "autoLiberoNoMiddles": "No selected player is a Middle blocker: set it in the roster.",
-    "defaultLibero": "Default libero"
+    "defaultLibero": "Default libero",
+    "rotateForward": "Rotate",
+    "rotateForwardHelp": "Rotate the line-up as on a side-out (II→I)",
+    "rotateBack": "Rotate back",
+    "rotateBackHelp": "Undo one rotation (I→II)",
+    "clearPositions": "Clear",
+    "swapSidesShort": "Sides",
+    "error": "Error",
+    "errorHelp": "{{team}} error: point to the opponent"
   },
   "engine": {
     "needs_lineup": "Enter the set line-up first.",
@@ -357,14 +367,14 @@
   "legend": {
     "title": "Code legend",
     "structure": "Structure of an action code",
-    "partTeam": "Team: * home, a away (if omitted: home; for serves, the serving team; for receptions, the receiving team)",
+    "partTeam": "Team: * home, a away (optional; see below how it is inferred)",
     "partPlayer": "Shirt number (1 or 2 digits; may be omitted for serves)",
     "partSkill": "Skill",
     "partType": "Type (optional)",
-    "partEval": "Rating",
+    "partEval": "Evaluation (optional; + if omitted)",
     "partStart": "Start zone (optional, 1–9 or ~)",
     "partEnd": "End zone (optional, 1–9)",
-    "defaults": "You can type several codes in a row separated by spaces. Case does not matter.",
+    "defaults": "Several codes can be typed in a row separated by spaces, upper or lower case. If the team is omitted: the serve belongs to the serving team; the reception to the receiving team; after a serve or an attack (other than /), the action belongs to the other team; otherwise, to the team of the last action.",
     "evalTitle": "Ratings by skill",
     "pointFor": "Point for the team",
     "pointAgainst": "Point for the opponent",

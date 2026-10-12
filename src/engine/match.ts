@@ -47,7 +47,8 @@ export interface TeamLineup {
 
 export type MatchEventData =
   | { type: 'lineup'; home: TeamLineup; away: TeamLineup; serving: Side }
-  | { type: 'point'; side: Side }
+  // error: el punt és per un error de l'altre equip (codi *e / ae)
+  | { type: 'point'; side: Side; error?: boolean }
   | { type: 'sub'; side: Side; out: number; in: number }
   | { type: 'libero'; side: Side; libero: number; player: number }
   | { type: 'timeout'; side: Side }

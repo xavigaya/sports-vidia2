@@ -58,6 +58,27 @@ export function LineupForm({ setNumber, isTiebreak, players, teamNames, initial,
     return (
       <fieldset className="lineup-team card">
         <legend>{teamNames[side]}</legend>
+        <div className="row wrap lineup-tools">
+          <button
+            type="button"
+            className="btn btn-sm"
+            title={t('live.rotateForwardHelp')}
+            onClick={() => setValue({ ...value, positions: value.positions.map((_, i) => value.positions[(i + 1) % 6]) })}
+          >
+            ↻ {t('live.rotateForward')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            title={t('live.rotateBackHelp')}
+            onClick={() => setValue({ ...value, positions: value.positions.map((_, i) => value.positions[(i + 5) % 6]) })}
+          >
+            ↺ {t('live.rotateBack')}
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => setValue({ ...value, positions: [-1, -1, -1, -1, -1, -1] })}>
+            ✕ {t('live.clearPositions')}
+          </button>
+        </div>
         {list.length === 0 && <p className="warn small">{t('matches.noPlayersCalled')}</p>}
         <div className="lineup-grid">
           {/* Disposició com al camp: IV III II a dalt, V VI I a baix */}

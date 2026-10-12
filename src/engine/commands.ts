@@ -11,9 +11,12 @@
 //     S+          servei sense dorsal: el fa qui és a la posició I de l'equip que serveix
 //     5R-         recepció sense prefix: equip que rep
 //     7A++        "++" s'enregistra com a "#", i "--" com a "="
+//     7A          sense qualificació: "+"
+// Si no s'indica l'equip, es dedueix de la jugada (vegeu defaultSide).
 //
 // Marcador:
 //     *p / ap     punt local / visitant
+//     *e / ae     error de l'equip (punt per a l'altre)
 //     *T / aT     temps mort
 //     *c3:13      canvi: surt el 3, entra el 13
 //     *l10:5      líbero 10 per (o de tornada pel) 5         [extensió pròpia]
@@ -25,7 +28,7 @@ import type { MatchEventData, MatchState, Side } from './match';
 import { onCourt } from './match';
 import { other } from './side';
 import type { Evaluation, Skill, SkillType } from './actions';
-import { actionCode } from './actions';
+import { actionCode, pointWinner } from './actions';
 
 export type ParseError = 'empty' | 'side' | 'syntax' | 'player_required';
 
@@ -49,7 +52,8 @@ export type ParseResult =
 
 const PAIR = /^(\d{1,2})[:.](\d{1,2})$/;
 // Qualificació: # + ! - / =  (també "++" equival a "#" i "--" equival a "=")
-const ACTION = /^(\d{1,2})?([SREABDF])([HMQTUFO])?(\+\+|--|[#+!\-/=])([1-9~])?([1-9~])?$/i;
+// Si no s'indica la qualificació, s'entén "+"
+const ACTION = /^(\d{1,2})?([SREABDF])([HMQTUFO])?(\+\+|--|[#+!\-/=])?([1-9~])?([1-9~])?$/i;
 
 const EVAL_ALIASES: Record<string, Evaluation> = { '++': '#', '--': '=' };
 
@@ -71,6 +75,8 @@ function parseToken(raw: string): ParsedToken | ParseError {
   // Marcador (requereix prefix d'equip)
   if (side && op === 'p' && !args) return { type: 'point', side };
   if (side && op === 't' && !args) return { type: 'timeout', side };
+  // Error de l'equip: punt per a l'altre
+  if (side && op === 'e' && !args) return { type: 'point', side: other(side), error: true };
   if (side && op === 'c') {
     const m = PAIR.exec(args);
     return m ? { type: 'sub', side, out: Number(m[1]), in: Number(m[2]) } : 'syntax';
@@ -92,7 +98,7 @@ function parseToken(raw: string): ParsedToken | ParseError {
     player,
     skill,
     skillType: a[3] ? (a[3].toUpperCase() as SkillType) : null,
-    evaluation: EVAL_ALIASES[a[4]] ?? (a[4] as Evaluation),
+    evaluation: a[4] ? (EVAL_ALIASES[a[4]] ?? (a[4] as Evaluation)) : '+',
     startZone: zone(a[5]),
     endZone: zone(a[6]),
   };
@@ -110,14 +116,29 @@ export function parseCommand(input: string): ParseResult {
   return { ok: true, events };
 }
 
+// Equip d'una acció quan no s'indica amb * o a:
+//  - servei: l'equip que serveix;
+//  - acció complementària de la que acaba de tancar la jugada (p. ex. B#
+//    després d'un A/, o R= després d'un S#): l'equip contrari;
+//  - recepció: l'equip que rep;
+//  - després d'un servei o un atac que no sigui "/": l'equip contrari;
+//  - en els altres casos: el mateix equip de l'última acció.
+export function defaultSide(state: MatchState, p: Pick<PartialAction, 'skill' | 'evaluation'>): Side {
+  if (p.skill === 'S') return state.serving;
+  if (state.closing) {
+    const opp = other(state.closing.side);
+    if (pointWinner({ side: opp, skill: p.skill, evaluation: p.evaluation }) === state.closing.winner) return opp;
+  }
+  if (p.skill === 'R') return other(state.serving);
+  const last = state.rally[state.rally.length - 1];
+  if (!last) return other(state.serving); // primer contacte després del servei
+  if ((last.skill === 'S' || last.skill === 'A') && last.evaluation !== '/') return other(last.side);
+  return last.side;
+}
+
 // Completa una acció amb l'estat del partit: equip i dorsal per defecte
 export function resolveAction(state: MatchState, p: PartialAction): MatchEventData {
-  let side = p.side;
-  if (side === null) {
-    if (p.skill === 'S') side = state.serving;
-    else if (p.skill === 'R') side = other(state.serving);
-    else side = 'H';
-  }
+  const side = p.side ?? defaultSide(state, p);
   let player = p.player;
   if (player === null) {
     // Només el servei pot anar sense dorsal
@@ -141,7 +162,7 @@ export function eventCode(ev: MatchEventData): string {
   const n = (x: number) => String(x).padStart(2, '0');
   switch (ev.type) {
     case 'point':
-      return `${p(ev.side)}p`;
+      return ev.error ? `${p(other(ev.side))}e` : `${p(ev.side)}p`;
     case 'timeout':
       return `${p(ev.side)}T`;
     case 'sub':

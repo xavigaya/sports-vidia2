@@ -39,7 +39,25 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const club = useCurrentClub();
   const match = m.match!;
   const state = m.state!;
-  const [flip, setFlip] = useState(false);
+  // Costat de cada equip a la pantalla (es recorda per partit en aquest dispositiu)
+  const flipKey = `svidia.flip.${match.id}`;
+  const [flip, setFlipState] = useState(() => {
+    try {
+      return localStorage.getItem(flipKey) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setFlip = (f: (v: boolean) => boolean) =>
+    setFlipState((v) => {
+      const nv = f(v);
+      try {
+        localStorage.setItem(flipKey, nv ? '1' : '0');
+      } catch {
+        /* sense emmagatzematge */
+      }
+      return nv;
+    });
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
   const [lineupOpen, setLineupOpen] = useState(false);
   const [subSide, setSubSide] = useState<Side | null>(null);
@@ -167,6 +185,9 @@ export function LiveScoring({ m }: { m: UseMatch }) {
                 : t('live.notStarted')}
           </div>
           {inPlay && <div className="small muted">{t('live.to', { n: targetPoints(state) })}</div>}
+          <button className="btn btn-sm sb-swap" onClick={() => setFlip((f) => !f)} title={t('live.swapSides')}>
+            ⇄ {t('live.swapSidesShort')}
+          </button>
           <div className="sb-history mono small">
             {state.sets
               .filter((s) => s.winner)
@@ -230,6 +251,14 @@ export function LiveScoring({ m }: { m: UseMatch }) {
                 {t('live.point')} {names[side]}
               </button>
               <div className="action-row">
+                <button
+                  className="btn btn-error"
+                  disabled={!inPlay}
+                  title={t('live.errorHelp', { team: names[side] })}
+                  onClick={() => void send({ type: 'point', side: side === 'H' ? 'A' : 'H', error: true })}
+                >
+                  {t('live.error')}
+                </button>
                 <button className="btn" disabled={!inPlay} onClick={() => void send({ type: 'timeout', side })}>
                   {t('live.timeout')}
                 </button>
@@ -270,9 +299,6 @@ export function LiveScoring({ m }: { m: UseMatch }) {
             )}
             <button className="btn" onClick={() => void m.undo()} disabled={m.events.length === 0} title="Ctrl+Z">
               ↶ {t('live.undo')}
-            </button>
-            <button className="btn" onClick={() => setFlip((f) => !f)}>
-              ⇄ {t('live.swapSides')}
             </button>
             <button className="btn cmd-help" onClick={() => setLegendOpen(true)}>
               {t('legend.title')}
@@ -507,7 +533,9 @@ function describe(
     case 'lineup':
       return t('live.desc.lineup', { set: ev.set, team: names[ev.serving] });
     case 'point':
-      return t('live.desc.point', { team: names[ev.side] });
+      return ev.error
+        ? t('live.desc.error', { team: names[ev.side === 'H' ? 'A' : 'H'], other: names[ev.side] })
+        : t('live.desc.point', { team: names[ev.side] });
     case 'timeout':
       return t('live.desc.timeout', { team: names[ev.side] });
     case 'sub':

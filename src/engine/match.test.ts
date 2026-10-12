@@ -444,3 +444,59 @@ describe('qualificacions dobles', () => {
     expect(first).toMatchObject({ side: 'H', player: 7, skill: 'A', startZone: 4, endZone: 1 });
   });
 });
+
+describe('deducció de l’equip i qualificació per defecte', () => {
+  // Executa una línia d'ordres sencera sobre l'estat
+  function run(s: MatchState, line: string): MatchState {
+    const r = parseCommand(line);
+    if (!r.ok) throw new Error(`${r.error} ${r.token}`);
+    for (const ev of r.events) s = applyEvent(s, ev.type === 'partial_action' ? resolveAction(s, ev) : ev);
+    return s;
+  }
+  const sideSeq = (s: MatchState) => s.rally.map((a) => `${a.side}${a.player}${a.skill}${a.evaluation}`);
+
+  test('sense qualificació s’entén +', () => {
+    const r = parseCommand('7A 12SH');
+    expect(r.ok && r.events.map((e) => ('evaluation' in e ? e.evaluation : null))).toEqual(['+', '+']);
+  });
+
+  test('després de servei o atac, l’acció és de l’equip contrari', () => {
+    // Serveix el local (H): R visitant, E i A del mateix visitant, B i D local
+    const s = run(start('H'), 'S 15R- 12E 13A+ 3B+ 4D');
+    expect(sideSeq(s)).toEqual(['H1S+', 'A15R-', 'A12E+', 'A13A+', 'H3B+', 'H4D+']);
+  });
+
+  test('la seqüència de la consulta sense indicar equips', () => {
+    // a2R- a8A+41 *8B+ *1A#41 → amb deducció: 2R- 8A+41 *8B+ 1A#41
+    const s0 = applyEvent(initialState(), {
+      type: 'lineup',
+      home: { positions: [1, 2, 3, 4, 5, 8], liberos: [] },
+      away: { positions: [2, 3, 4, 5, 6, 8], liberos: [] },
+      serving: 'H',
+    });
+    const s = run(s0, '2R- 8A+41 8B+ 1A#41');
+    expect(s.score).toEqual({ H: 1, A: 0 });
+  });
+
+  test('servei "/": la pilota torna i l’acció següent és del mateix equip que serveix', () => {
+    const s = run(start('H'), 'S/ 3A');
+    expect(sideSeq(s)).toEqual(['H1S/', 'H3A+']);
+  });
+
+  test('el prefix * o a mana sobre la deducció', () => {
+    const s = run(start('H'), 'S a15R *4D');
+    expect(sideSeq(s)).toEqual(['H1S+', 'A15R+', 'H4D+']);
+  });
+
+  test('acció complementària deduïda: atac bloquejat i punt de bloqueig', () => {
+    const s = run(start('H'), 'S 12A/ 3B#');
+    expect(s.score).toEqual({ H: 1, A: 0 });
+  });
+
+  test('error d’equip: *e és punt visitant i ae és punt local', () => {
+    expect(parseCommand('*e')).toEqual({ ok: true, events: [{ type: 'point', side: 'A', error: true }] });
+    const s = run(start('H'), '*e ae ae');
+    expect(s.score).toEqual({ H: 2, A: 1 });
+    expect(eventCode({ type: 'point', side: 'A', error: true })).toBe('*e');
+  });
+});
