@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { cached } from '../offline/store';
 import { useAuth } from '../auth/AuthProvider';
 import type { Club, ClubRole, Membership } from '../lib/types';
 import { applyClubTheme } from './theme';
@@ -52,11 +53,11 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     // Primer s'accepten les invitacions pendents per a aquest correu
-    await supabase.rpc('accept_pending_invitations');
-    const { data, error } = await supabase
-      .from('club_members')
-      .select('club_id, role, clubs(*)')
-      .eq('user_id', user.id);
+    if (navigator.onLine !== false) await supabase.rpc('accept_pending_invitations');
+    // Amb còpia local: sense connexió es pot continuar treballant amb el club
+    const { data, error } = await cached(`memberships:${user.id}`, () =>
+      supabase.from('club_members').select('club_id, role, clubs(*)').eq('user_id', user.id),
+    );
     if (error) {
       setError(error.message);
     } else {

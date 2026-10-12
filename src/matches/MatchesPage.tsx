@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { cached } from '../offline/store';
 import { useAuth } from '../auth/AuthProvider';
 import { useClub, useCurrentClub } from '../club/ClubProvider';
 import type { MatchWithTeams, Season, Team, TeamPlayer } from '../lib/types';
@@ -21,12 +22,14 @@ export function MatchesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('matches')
-      .select(MATCH_SELECT)
-      .eq('club_id', club.id)
-      .order('played_at', { ascending: false, nullsFirst: true })
-      .order('created_at', { ascending: false });
+    const { data, error } = await cached(`matches:${club.id}`, () =>
+      supabase
+        .from('matches')
+        .select(MATCH_SELECT)
+        .eq('club_id', club.id)
+        .order('played_at', { ascending: false, nullsFirst: true })
+        .order('created_at', { ascending: false }),
+    );
     if (error) setError(error.message);
     else setMatches((data ?? []) as unknown as MatchWithTeams[]);
     setLoading(false);

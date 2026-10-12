@@ -12,6 +12,9 @@ import {
   type MatchRules,
   type MatchState,
 } from '../engine/match';
+import { cached } from '../offline/store';
+import { enqueue, flush, getOps, subscribe } from '../offline/outbox';
+import { mergePending, type EventRowPayload } from '../offline/queue';
 
 export const MATCH_SELECT =
   '*, home:teams!matches_home_team_id_fkey(id, name, short_name, code, color, is_own), away:teams!matches_away_team_id_fkey(id, name, short_name, code, color, is_own)';
@@ -49,32 +52,49 @@ export function useMatch(matchId: string) {
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Dades llegides de la còpia local perquè no hi ha connexió
+  const [fromCache, setFromCache] = useState(false);
   const busy = useRef(false);
 
+  // Totes les lectures tenen còpia local per poder treballar sense connexió
   const loadMatch = useCallback(async () => {
-    const { data, error } = await supabase.from('matches').select(MATCH_SELECT).eq('id', matchId).single();
-    if (error) setError(error.message);
-    else setMatch(data as unknown as MatchWithTeams);
+    const r = await cached(`match:${matchId}`, () => supabase.from('matches').select(MATCH_SELECT).eq('id', matchId).single());
+    if (r.error) setError(r.error.message);
+    else setMatch(r.data as unknown as MatchWithTeams);
+    setFromCache(r.fromCache);
   }, [matchId]);
 
   const loadPlayers = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('match_players')
-      .select('*, players(id, first_name, last_name, nickname)')
-      .eq('match_id', matchId)
-      .order('shirt_number');
-    if (error) setError(error.message);
-    else setPlayers((data ?? []) as MatchPlayer[]);
+    const r = await cached(`mplayers:${matchId}`, () =>
+      supabase.from('match_players').select('*, players(id, first_name, last_name, nickname)').eq('match_id', matchId).order('shirt_number'),
+    );
+    if (r.error) setError(r.error.message);
+    else setPlayers((r.data ?? []) as MatchPlayer[]);
   }, [matchId]);
 
   const loadEvents = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('match_events')
-      .select('seq, set_number, type, data, video_time')
-      .eq('match_id', matchId)
-      .order('seq');
-    if (error) setError(error.message);
-    else setEvents((data ?? []).map((r) => rowToEvent(r as MatchEventRow)));
+    const r = await cached(`events:${matchId}`, () =>
+      supabase.from('match_events').select('seq, set_number, type, data, video_time').eq('match_id', matchId).order('seq'),
+    );
+    if (r.error) {
+      setError(r.error.message);
+      return;
+    }
+    // Es completen amb els canvis locals que encara no s'han enviat
+    const server = ((r.data ?? []) as MatchEventRow[]).map((row) => rowToEvent(row));
+    setEvents(mergePending(server, await getOps(), matchId, (row) => rowToEvent(row as unknown as MatchEventRow)));
+  }, [matchId]);
+
+  // Canvis pendents d'aquest partit (per a l'indicador)
+  const [pending, setPending] = useState({ count: 0, failed: 0 });
+  useEffect(() => {
+    const update = () =>
+      void getOps().then((ops) => {
+        const mine = ops.filter((o) => o.matchId === matchId);
+        setPending({ count: mine.filter((o) => !o.error).length, failed: mine.filter((o) => o.error).length });
+      });
+    update();
+    return subscribe(update);
   }, [matchId]);
 
   useEffect(() => {
@@ -129,8 +149,8 @@ export function useMatch(matchId: string) {
         set_scores: s.sets.map((x) => ({ h: x.home, a: x.away })),
         status: s.phase === 'match_over' ? 'finished' : s.currentSet > 0 ? 'live' : 'scheduled',
       };
-      await supabase.from('matches').update(summary).eq('id', match.id);
-      setMatch((m) => (m ? { ...m, ...summary } as MatchWithTeams : m));
+      setMatch((m) => (m ? ({ ...m, ...summary } as MatchWithTeams) : m));
+      await enqueue({ kind: 'match_update', matchId: match.id, patch: summary });
     },
     [match],
   );
@@ -155,9 +175,9 @@ export function useMatch(matchId: string) {
       const newEvent = { ...ev, seq, set, videoTime } as MatchEvent;
       next.lastSeq = seq;
       stateRef.current = next;
-      busy.current = true;
-      setEvents((list) => [...list, newEvent]); // optimista
-      const { error } = await supabase.from('match_events').insert({
+      setEvents((list) => [...list, newEvent]);
+      // Es desa a la cua local i s'envia quan hi ha connexió (immediatament si n'hi ha)
+      const row: EventRowPayload = {
         match_id: match.id,
         club_id: match.club_id,
         seq,
@@ -165,14 +185,12 @@ export function useMatch(matchId: string) {
         type: ev.type,
         data: eventToData(ev),
         video_time: videoTime,
-        created_by: user?.id,
-      });
+        created_by: user?.id ?? null,
+        created_at: new Date().toISOString(),
+      };
+      busy.current = true;
+      await enqueue({ kind: 'insert_event', matchId: match.id, seq, row });
       busy.current = false;
-      if (error) {
-        stateRef.current = state;
-        setEvents((list) => list.filter((e) => e.seq !== seq));
-        return { ok: false, error: new Error(error.message) };
-      }
       if (ev.type === 'point' || ev.type === 'lineup' || next.score.H + next.score.A !== state.score.H + state.score.A) {
         void syncSummary(next);
       }
@@ -184,15 +202,11 @@ export function useMatch(matchId: string) {
   const undo = useCallback(async () => {
     if (!match || events.length === 0) return;
     const last = events[events.length - 1];
-    busy.current = true;
-    const { error } = await supabase.from('match_events').delete().eq('match_id', match.id).eq('seq', last.seq);
-    busy.current = false;
-    if (error) {
-      setError(error.message);
-      return;
-    }
     const remaining = events.slice(0, -1);
     setEvents(remaining);
+    busy.current = true;
+    await enqueue({ kind: 'delete_event', matchId: match.id, seq: last.seq });
+    busy.current = false;
     if (rules) void syncSummary(replay(remaining, rules).state);
   }, [match, events, rules, syncSummary]);
 
@@ -200,9 +214,8 @@ export function useMatch(matchId: string) {
   const setEventTime = useCallback(
     async (seq: number, time: number | null) => {
       if (!match) return;
-      const { error } = await supabase.from('match_events').update({ video_time: time }).eq('match_id', match.id).eq('seq', seq);
-      if (error) setError(error.message);
-      else setEvents((list) => list.map((e) => (e.seq === seq ? { ...e, videoTime: time } : e)));
+      setEvents((list) => list.map((e) => (e.seq === seq ? { ...e, videoTime: time } : e)));
+      await enqueue({ kind: 'event_time', matchId: match.id, seq, time });
     },
     [match],
   );
@@ -211,6 +224,8 @@ export function useMatch(matchId: string) {
   const syncVideo = useCallback(
     async (seq: number, time: number, onlyMissing: boolean) => {
       if (!match) return 0;
+      // Primer s'envien els canvis pendents (la sincronització es fa al servidor)
+      await flush();
       const { data, error } = await supabase.rpc('sync_match_video', {
         p_match: match.id,
         p_seq: seq,
@@ -253,6 +268,8 @@ export function useMatch(matchId: string) {
     loading,
     error,
     setError,
+    fromCache,
+    pending,
     canCode,
     isCoder,
     append,

@@ -563,5 +563,22 @@
       "libero": "Líbero",
       "timeout": "Tiempo muerto"
     }
+  },
+  "offline": {
+    "offline": "Sin conexión",
+    "offlineHelp": "Puedes seguir codificando: los cambios se guardan en este dispositivo y se enviarán solos cuando vuelva la conexión. No cierres la sesión hasta que esté todo enviado.",
+    "onlineHelp": "Hay cambios guardados en este dispositivo que se están enviando a la nube.",
+    "syncing": "Sincronizando",
+    "pending_one": "{{count}} pendiente",
+    "pending_other": "{{count}} pendientes",
+    "failedShort_one": "{{count}} cambio no guardado",
+    "failedShort_other": "{{count}} cambios no guardados",
+    "failedHelp_one": "{{count}} cambio no se ha podido guardar en la nube (por ejemplo, porque ya no tienes permiso para codificar este partido).",
+    "failedHelp_other": "{{count}} cambios no se han podido guardar en la nube (por ejemplo, porque ya no tienes permiso para codificar este partido).",
+    "retry": "Reintentar",
+    "discard": "Descartarlos",
+    "discardConfirm": "Se perderán estos cambios. ¿Quieres continuar?",
+    "syncNow": "Enviar ahora",
+    "cachedData": "No hay conexión: se muestra la última copia guardada en este dispositivo. Lo que codifiques se enviará cuando vuelva la conexión."
   }
 }

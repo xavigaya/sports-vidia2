@@ -563,5 +563,22 @@
       "libero": "Líbero",
       "timeout": "Temps mort"
     }
+  },
+  "offline": {
+    "offline": "Sense connexió",
+    "offlineHelp": "Pots continuar codificant: els canvis es guarden en aquest dispositiu i s’enviaran sols quan torni la connexió. No tanquis la sessió fins que estigui tot enviat.",
+    "onlineHelp": "Hi ha canvis desats en aquest dispositiu que s’estan enviant al núvol.",
+    "syncing": "Sincronitzant",
+    "pending_one": "{{count}} pendent",
+    "pending_other": "{{count}} pendents",
+    "failedShort_one": "{{count}} canvi no desat",
+    "failedShort_other": "{{count}} canvis no desats",
+    "failedHelp_one": "{{count}} canvi no s’ha pogut desar al núvol (per exemple, perquè ja no tens permís per codificar aquest partit).",
+    "failedHelp_other": "{{count}} canvis no s’han pogut desar al núvol (per exemple, perquè ja no tens permís per codificar aquest partit).",
+    "retry": "Torna-ho a provar",
+    "discard": "Descarta’ls",
+    "discardConfirm": "Es perdran aquests canvis. Vols continuar?",
+    "syncNow": "Envia ara",
+    "cachedData": "No hi ha connexió: es mostra l’última còpia desada en aquest dispositiu. El que codifiquis s’enviarà quan torni la connexió."
   }
 }

@@ -63,7 +63,16 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 - Exportació a Excel de les estadístiques i totes les accions d'un partit, i de les estadístiques acumulades d'un equip.
 - Importació d'equips i plantilles des d'Excel (`.xlsx`), a més de CSV.
 
-**Properes fases**: funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
+**Fase 7 — Sense connexió**
+
+- Codificació de partits sense connexió: cada canvi es desa primer al dispositiu (IndexedDB) i s'envia al núvol en ordre quan hi ha xarxa, automàticament.
+- Còpia local del club, la llista de partits i cada partit obert, per poder-hi treballar sense connexió.
+- Indicador de connexió i de canvis pendents; opció de reintentar o descartar els canvis que el servidor rebutgi.
+- *Service worker*: la versió compilada de l'aplicació s'obre encara que no hi hagi connexió.
+
+Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir (amb connexió) perquè quedi desat al dispositiu. Els partits nous s'han de crear amb connexió.
+
+**Properes fases**: versions d'escriptori i Android; pujada de vídeos a YouTube.
 
 ## Tecnologia
 
@@ -127,5 +136,6 @@ src/matches/           Partits, convocatòria i marcador en directe
 src/video/             Reproductor (YouTube i local), sincronització i vídeos filtrats
 src/stats/             Càlcul i presentació d'estadístiques, exportació a Excel
 src/dvw/               Lectura i escriptura de fitxers DataVolley
+src/offline/           Còpia local, cua de canvis pendents i sincronització
 src/i18n/              Traduccions (ca.json és la referència)
 ```

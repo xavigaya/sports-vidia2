@@ -563,5 +563,22 @@
       "libero": "Libero",
       "timeout": "Time-out"
     }
+  },
+  "offline": {
+    "offline": "Offline",
+    "offlineHelp": "You can keep coding: changes are stored on this device and sent automatically when the connection returns. Do not sign out until everything has been sent.",
+    "onlineHelp": "Changes stored on this device are being sent to the cloud.",
+    "syncing": "Syncing",
+    "pending_one": "{{count}} pending",
+    "pending_other": "{{count}} pending",
+    "failedShort_one": "{{count}} change not saved",
+    "failedShort_other": "{{count}} changes not saved",
+    "failedHelp_one": "{{count}} change could not be saved to the cloud (for example, because you can no longer code this match).",
+    "failedHelp_other": "{{count}} changes could not be saved to the cloud (for example, because you can no longer code this match).",
+    "retry": "Retry",
+    "discard": "Discard them",
+    "discardConfirm": "These changes will be lost. Continue?",
+    "syncNow": "Send now",
+    "cachedData": "You are offline: showing the last copy stored on this device. What you code will be sent when the connection returns."
   }
 }

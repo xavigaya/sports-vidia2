@@ -99,6 +99,7 @@ export function MatchPage() {
         </button>
       </div>
 
+      {m.fromCache && <div className="notice small">{t('offline.cachedData')}</div>}
       {m.error && <ErrorBox message={m.error} />}
       {tab === 'live' ? (
         m.players.length === 0 && m.events.length === 0 ? (
