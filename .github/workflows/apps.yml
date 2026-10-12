@@ -3,8 +3,9 @@ name: Aplicacions
 # Compila les aplicacions instal·lables:
 #  - Windows (.msi i .exe) i Linux (.deb, .AppImage, .rpm) amb Tauri
 #  - Android (.apk) amb Capacitor
-# S'executa en publicar una etiqueta de versió (v0.8.0…) o manualment.
-# Amb una etiqueta, a més, es crea una "Release" amb tots els fitxers.
+# S'executa quan canvia la versió de package.json a la branca main, en
+# publicar una etiqueta de versió (v0.8.0…) o manualment. Excepte en
+# l'execució manual, es crea una "Release" v<versió> amb tots els fitxers.
 #
 # Opcional: les variables del repositori SUPABASE_URL i SUPABASE_ANON_KEY
 # (Settings → Secrets and variables → Actions → Variables) fan que les
@@ -15,6 +16,11 @@ on:
   workflow_dispatch:
   push:
     tags: ['v*']
+    branches: [main]
+    paths:
+      - package.json
+      - src-tauri/**
+      - .github/workflows/apps.yml
 
 permissions:
   contents: write
@@ -92,10 +98,14 @@ jobs:
 
   release:
     name: Publica la versió
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push'
     needs: [desktop, android]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Versió
+        id: ver
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
           path: fitxers
@@ -103,7 +113,9 @@ jobs:
       - run: ls -R fitxers
       - uses: softprops/action-gh-release@v2
         with:
-          name: Sports VidIA ${{ github.ref_name }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Sports VidIA ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || steps.ver.outputs.tag }}
           body: |
             Aplicacions instal·lables de Sports VidIA.
 
