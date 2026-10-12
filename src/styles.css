@@ -640,3 +640,4 @@ h3 { margin: 0; font-size: 1rem; }
 @media (max-width: 860px) {
   .nav a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+.dvw-team legend { padding: 0 6px; }

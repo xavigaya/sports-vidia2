@@ -409,9 +409,9 @@
     "exportBtn": "Exporta CSV",
     "importTitleAll": "Importa equips i jugadors",
     "importTitleTeam": "Importa jugadors a {{team}}",
-    "helpAll": "Cada fila és un jugador. La columna «equip» indica a quin equip va; si l’equip no existeix, es crea. Es pot fer amb Excel desant com a «CSV UTF-8».",
-    "helpTeam": "Cada fila és un jugador de {{team}}. Es pot fer amb Excel desant com a «CSV UTF-8».",
-    "chooseFile": "Tria un fitxer CSV",
+    "helpAll": "Cada fila és un jugador. La columna «equip» indica a quin equip va; si l’equip no existeix, es crea. Es pot fer amb Excel desant com a «CSV UTF-8». També pots fer servir directament un fitxer Excel (.xlsx): es llegeix el primer full.",
+    "helpTeam": "Cada fila és un jugador de {{team}}. Es pot fer amb Excel desant com a «CSV UTF-8». També pots fer servir directament un fitxer Excel (.xlsx): es llegeix el primer full.",
+    "chooseFile": "Tria un fitxer CSV o Excel",
     "template": "Baixa una plantilla d’exemple",
     "needTeamColumn": "El fitxer no té columna «equip». Per importar-lo, obre la fitxa d’un equip i importa-hi els jugadors.",
     "preview": "{{rows}} jugadors llegits",
@@ -528,5 +528,38 @@
     "noMatches": "Aquest equip encara no té partits jugats amb dades.",
     "matchesSelected": "Partits inclosos: {{n}} de {{total}}",
     "record": "{{won}} V – {{lost}} D"
+  },
+  "dvw": {
+    "importBtn": "Importa DataVolley",
+    "importTitle": "Importa un partit de DataVolley",
+    "importHelp": "Tria un fitxer .dvw. Es crearà un partit nou amb els equips, els jugadors i totes les accions. Els jugadors que ja existeixin a la plantilla amb el mateix dorsal es reaprofiten.",
+    "chooseFile": "Tria el fitxer .dvw",
+    "noScout": "El fitxer no conté accions ([3SCOUT]).",
+    "summary": "Sets: {{sets}} · {{actions}} accions · {{players}} jugadors",
+    "teamInApp": "Equip a l’aplicació",
+    "createTeam": "Crea l’equip «{{name}}»",
+    "playersHelp_one": "{{count}} jugador al fitxer.",
+    "playersHelp_other": "{{count}} jugadors al fitxer.",
+    "warnings_one": "{{count}} línia no s’ha pogut interpretar",
+    "warnings_other": "{{count}} línies no s’han pogut interpretar",
+    "import": "Importa el partit",
+    "exportHelp": "Descarrega el partit en format DataVolley (.dvw)"
+  },
+  "excel": {
+    "summary": "Resum",
+    "actions": "Accions",
+    "result": "Resultat",
+    "scoreBefore": "Marcador",
+    "type": "Tipus",
+    "evaluation": "Qualificació",
+    "videoTime": "Vídeo (s)",
+    "code": "Codi",
+    "event": {
+      "lineup": "Alineació",
+      "point": "Punt",
+      "sub": "Canvi",
+      "libero": "Líbero",
+      "timeout": "Temps mort"
+    }
   }
 }

@@ -409,9 +409,9 @@
     "exportBtn": "Export CSV",
     "importTitleAll": "Import teams and players",
     "importTitleTeam": "Import players into {{team}}",
-    "helpAll": "Each row is a player. The “team” column says which team they belong to; missing teams are created. You can use Excel and save as “CSV UTF-8”.",
-    "helpTeam": "Each row is a player of {{team}}. You can use Excel and save as “CSV UTF-8”.",
-    "chooseFile": "Choose a CSV file",
+    "helpAll": "Each row is a player. The “team” column says which team they belong to; missing teams are created. You can use Excel and save as “CSV UTF-8”. You can also use an Excel file (.xlsx) directly: the first sheet is read.",
+    "helpTeam": "Each row is a player of {{team}}. You can use Excel and save as “CSV UTF-8”. You can also use an Excel file (.xlsx) directly: the first sheet is read.",
+    "chooseFile": "Choose a CSV or Excel file",
     "template": "Download a sample template",
     "needTeamColumn": "The file has no “team” column. To import it, open a team’s page and import the players there.",
     "preview": "{{rows}} players read",
@@ -528,5 +528,38 @@
     "noMatches": "This team has no played matches with data yet.",
     "matchesSelected": "Matches included: {{n}} of {{total}}",
     "record": "{{won}} W – {{lost}} L"
+  },
+  "dvw": {
+    "importBtn": "Import DataVolley",
+    "importTitle": "Import a DataVolley match",
+    "importHelp": "Choose a .dvw file. A new match is created with the teams, players and all actions. Players already on the roster with the same number are reused.",
+    "chooseFile": "Choose the .dvw file",
+    "noScout": "The file contains no actions ([3SCOUT]).",
+    "summary": "Sets: {{sets}} · {{actions}} actions · {{players}} players",
+    "teamInApp": "Team in the app",
+    "createTeam": "Create team “{{name}}”",
+    "playersHelp_one": "{{count}} player in the file.",
+    "playersHelp_other": "{{count}} players in the file.",
+    "warnings_one": "{{count}} line could not be read",
+    "warnings_other": "{{count}} lines could not be read",
+    "import": "Import match",
+    "exportHelp": "Download the match in DataVolley format (.dvw)"
+  },
+  "excel": {
+    "summary": "Summary",
+    "actions": "Actions",
+    "result": "Result",
+    "scoreBefore": "Score",
+    "type": "Type",
+    "evaluation": "Evaluation",
+    "videoTime": "Video (s)",
+    "code": "Code",
+    "event": {
+      "lineup": "Line-up",
+      "point": "Point",
+      "sub": "Substitution",
+      "libero": "Libero",
+      "timeout": "Time-out"
+    }
   }
 }

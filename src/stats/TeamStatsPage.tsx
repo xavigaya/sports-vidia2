@@ -8,6 +8,7 @@ import { MATCH_SELECT, rowToEvent, rulesOf } from '../matches/useMatch';
 import type { Side } from '../engine/match';
 import { addSkills, addTeam, addZones, computeMatchStats, emptyLine, emptyTeamStats, type Line, type TeamStats } from './compute';
 import { PlayerTable, RotationTable, TeamSummary, ZoneMap, type PlayerRow } from './StatsTables';
+import { downloadStatsWorkbook, playersSheet, rotationsSheet, teamSummaryRows } from './excel';
 
 // Llegeix totes les files (Supabase en retorna com a màxim 1000 per petició)
 async function fetchAllEvents(matchIds: string[]): Promise<MatchEventRow[]> {
@@ -173,6 +174,21 @@ export function TeamStatsPage() {
                 </option>
               ))}
             </select>
+            <button
+              className="btn"
+              disabled={!agg || !team}
+              onClick={() => {
+                if (!agg || !team) return;
+                const seasonName = seasons.find((s) => s.id === seasonId)?.name ?? t('stats.allSeasons');
+                void downloadStatsWorkbook(`${team.name} ${seasonName}`, [
+                  { name: t('excel.summary'), rows: [[t('stats.record', { won: agg.won, lost: agg.lost })], [], ...teamSummaryRows(t, team.name, agg.team)], widths: [26, 14, 10] },
+                  playersSheet(t, t('stats.players'), agg.players, { key: 't', number: null, name: t('stats.teamTotal'), line: agg.team }, true),
+                  rotationsSheet(t, [{ name: team.name, team: agg.team }]),
+                ]).catch((e: Error) => setError(e.message));
+              }}
+            >
+              ⤒ Excel
+            </button>
             <select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} aria-label={t('teams.season')}>
               <option value="">{t('stats.allSeasons')}</option>
               {seasons.map((s) => (

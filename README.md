@@ -56,7 +56,14 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 - Des de cada número de la taula s'obren les jugades corresponents al vídeo.
 - Estadístiques acumulades d'un equip per temporada i partits seleccionats.
 
-**Properes fases**: importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
+**Fase 6 — DataVolley i Excel**
+
+- Exportació de qualsevol partit en format DataVolley (`.dvw`, codificació Windows-1252).
+- Importació de fitxers `.dvw` com a partit nou: equips (existents o nous), jugadors, alineacions, accions amb zones i instant de vídeo, canvis, temps morts i punts. Els partits importats no validen qui és al camp a cada acció, perquè DataVolley hi deixa implícits els líberos.
+- Exportació a Excel de les estadístiques i totes les accions d'un partit, i de les estadístiques acumulades d'un equip.
+- Importació d'equips i plantilles des d'Excel (`.xlsx`), a més de CSV.
+
+**Properes fases**: funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
 
 ## Tecnologia
 
@@ -118,6 +125,7 @@ src/players/           Jugadors
 src/engine/            Motor de partit (regles, rotacions, marcador) i codis
 src/matches/           Partits, convocatòria i marcador en directe
 src/video/             Reproductor (YouTube i local), sincronització i vídeos filtrats
-src/stats/             Càlcul i presentació d'estadístiques
+src/stats/             Càlcul i presentació d'estadístiques, exportació a Excel
+src/dvw/               Lectura i escriptura de fitxers DataVolley
 src/i18n/              Traduccions (ca.json és la referència)
 ```

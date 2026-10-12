@@ -409,9 +409,9 @@
     "exportBtn": "Exportar CSV",
     "importTitleAll": "Importar equipos y jugadores",
     "importTitleTeam": "Importar jugadores a {{team}}",
-    "helpAll": "Cada fila es un jugador. La columna «equipo» indica a qué equipo va; si el equipo no existe, se crea. Se puede hacer con Excel guardando como «CSV UTF-8».",
-    "helpTeam": "Cada fila es un jugador de {{team}}. Se puede hacer con Excel guardando como «CSV UTF-8».",
-    "chooseFile": "Elige un archivo CSV",
+    "helpAll": "Cada fila es un jugador. La columna «equipo» indica a qué equipo va; si el equipo no existe, se crea. Se puede hacer con Excel guardando como «CSV UTF-8». También puedes usar directamente un archivo Excel (.xlsx): se lee la primera hoja.",
+    "helpTeam": "Cada fila es un jugador de {{team}}. Se puede hacer con Excel guardando como «CSV UTF-8». También puedes usar directamente un archivo Excel (.xlsx): se lee la primera hoja.",
+    "chooseFile": "Elige un archivo CSV o Excel",
     "template": "Descargar una plantilla de ejemplo",
     "needTeamColumn": "El archivo no tiene columna «equipo». Para importarlo, abre la ficha de un equipo e importa allí los jugadores.",
     "preview": "{{rows}} jugadores leídos",
@@ -528,5 +528,38 @@
     "noMatches": "Este equipo todavía no tiene partidos jugados con datos.",
     "matchesSelected": "Partidos incluidos: {{n}} de {{total}}",
     "record": "{{won}} V – {{lost}} D"
+  },
+  "dvw": {
+    "importBtn": "Importar DataVolley",
+    "importTitle": "Importar un partido de DataVolley",
+    "importHelp": "Elige un archivo .dvw. Se creará un partido nuevo con los equipos, los jugadores y todas las acciones. Los jugadores que ya existan en la plantilla con el mismo dorsal se reaprovechan.",
+    "chooseFile": "Elegir el archivo .dvw",
+    "noScout": "El archivo no contiene acciones ([3SCOUT]).",
+    "summary": "Sets: {{sets}} · {{actions}} acciones · {{players}} jugadores",
+    "teamInApp": "Equipo en la aplicación",
+    "createTeam": "Crear el equipo «{{name}}»",
+    "playersHelp_one": "{{count}} jugador en el archivo.",
+    "playersHelp_other": "{{count}} jugadores en el archivo.",
+    "warnings_one": "{{count}} línea no se ha podido interpretar",
+    "warnings_other": "{{count}} líneas no se han podido interpretar",
+    "import": "Importar el partido",
+    "exportHelp": "Descargar el partido en formato DataVolley (.dvw)"
+  },
+  "excel": {
+    "summary": "Resumen",
+    "actions": "Acciones",
+    "result": "Resultado",
+    "scoreBefore": "Marcador",
+    "type": "Tipo",
+    "evaluation": "Calificación",
+    "videoTime": "Vídeo (s)",
+    "code": "Código",
+    "event": {
+      "lineup": "Alineación",
+      "point": "Punto",
+      "sub": "Cambio",
+      "libero": "Líbero",
+      "timeout": "Tiempo muerto"
+    }
   }
 }

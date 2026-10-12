@@ -122,6 +122,8 @@ export interface Match {
   coder_id: string | null;
   video_url: string | null;
   video_local_name: string | null;
+  lenient_actions?: boolean;
+  imported_from?: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;

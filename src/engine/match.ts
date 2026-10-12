@@ -24,6 +24,9 @@ export interface MatchRules {
   tiebreakPoints: number; // 15
   maxSubstitutions: number; // per set i equip (RFEVB: 8)
   timeoutsPerSet: number; // per set i equip
+  // Partits importats (DataVolley…): no es comprova qui és al camp ni qui serveix,
+  // perquè els líberos i alguns canvis hi consten de manera implícita
+  lenientActions?: boolean;
 }
 
 export const DEFAULT_RULES: MatchRules = {
@@ -298,12 +301,16 @@ export function applyEvent(prev: MatchState, ev: MatchEventData): MatchState {
     case 'action': {
       requireInPlay(s);
       const t = s.teams[ev.side];
-      if (!onCourt(t).includes(ev.player)) throw new EngineError('player_not_on_court', { player: ev.player });
-      if (ev.skill === 'S') {
-        if (s.serving !== ev.side) throw new EngineError('not_serving_team');
-        if (onCourt(t)[0] !== ev.player) throw new EngineError('not_server', { player: onCourt(t)[0] });
+      if (s.rules.lenientActions) {
+        checkRoster(s.rosters?.[ev.side], ev.player);
+      } else {
+        if (!onCourt(t).includes(ev.player)) throw new EngineError('player_not_on_court', { player: ev.player });
+        if (ev.skill === 'S') {
+          if (s.serving !== ev.side) throw new EngineError('not_serving_team');
+          if (onCourt(t)[0] !== ev.player) throw new EngineError('not_server', { player: onCourt(t)[0] });
+        }
+        if (ev.skill === 'R' && s.serving === ev.side) throw new EngineError('not_receiving_team');
       }
-      if (ev.skill === 'R' && s.serving === ev.side) throw new EngineError('not_receiving_team');
       const action: Action = { ...ev };
       delete (action as { type?: string }).type;
       s.rally.push(action);

@@ -7,6 +7,7 @@ import { useClub, useCurrentClub } from '../club/ClubProvider';
 import type { MatchWithTeams, Season, Team, TeamPlayer } from '../lib/types';
 import { EmptyState, ErrorBox, Modal, PageHeader, Spinner } from '../components/ui';
 import { MATCH_SELECT } from './useMatch';
+import { DvwImport } from '../dvw/DvwImport';
 
 export function MatchesPage() {
   const { t, i18n } = useTranslation();
@@ -16,6 +17,7 @@ export function MatchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,9 +44,14 @@ export function MatchesPage() {
         title={t('matches.title')}
         actions={
           canEdit && (
-            <button className="btn btn-primary" onClick={() => setCreating(true)}>
-              + {t('matches.new')}
-            </button>
+            <div className="row wrap">
+              <button className="btn" onClick={() => setImporting(true)}>
+                ⤓ {t('dvw.importBtn')}
+              </button>
+              <button className="btn btn-primary" onClick={() => setCreating(true)}>
+                + {t('matches.new')}
+              </button>
+            </div>
           )
         }
       />
@@ -83,6 +90,10 @@ export function MatchesPage() {
           ))}
         </div>
       )}
+
+      <Modal title={t('dvw.importTitle')} open={importing} onClose={() => setImporting(false)}>
+        <DvwImport onCancel={() => setImporting(false)} />
+      </Modal>
 
       <Modal title={t('matches.new')} open={creating} onClose={() => setCreating(false)}>
         <CreateMatchForm onCancel={() => setCreating(false)} />

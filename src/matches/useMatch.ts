@@ -16,8 +16,11 @@ import {
 export const MATCH_SELECT =
   '*, home:teams!matches_home_team_id_fkey(id, name, short_name, code, color, is_own), away:teams!matches_away_team_id_fkey(id, name, short_name, code, color, is_own)';
 
-export function rulesOf(m: Pick<MatchWithTeams, 'sets_to_win' | 'points_per_set' | 'tiebreak_points' | 'max_substitutions' | 'timeouts_per_set'>): MatchRules {
+export function rulesOf(
+  m: Pick<MatchWithTeams, 'sets_to_win' | 'points_per_set' | 'tiebreak_points' | 'max_substitutions' | 'timeouts_per_set' | 'lenient_actions'>,
+): MatchRules {
   return {
+    lenientActions: !!m.lenient_actions,
     setsToWin: m.sets_to_win,
     pointsPerSet: m.points_per_set,
     tiebreakPoints: m.tiebreak_points,

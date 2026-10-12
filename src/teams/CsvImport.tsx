@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorBox } from '../components/ui';
 import { downloadText, toCsv } from '../lib/csv';
+import { isExcelFile, readFirstSheet } from '../lib/excel';
 import type { Season, Team } from '../lib/types';
 import { parseTeamCsv, EXPORT_HEADERS, type CsvParseResult } from './teamCsv';
 import { importPlayers, type ImportSummary } from './importTeams';
@@ -32,7 +33,15 @@ export function CsvImport({ clubId, targetTeam, seasons = [], onDone }: Props) {
     setResult(null);
     setError(null);
     setFileName(f.name);
-    const r = parseTeamCsv(await f.text());
+    let text: string;
+    try {
+      // Excel: el primer full es converteix a CSV i es llegeix igual
+      text = isExcelFile(f.name) ? toCsv(await readFirstSheet(f)) : await f.text();
+    } catch (e) {
+      setError((e as Error).message);
+      return;
+    }
+    const r = parseTeamCsv(text);
     if (!targetTeam && !r.hasTeamColumn && r.rows.length > 0) {
       setError(t('csv.needTeamColumn'));
     }
@@ -93,7 +102,7 @@ export function CsvImport({ clubId, targetTeam, seasons = [], onDone }: Props) {
           {t('csv.chooseFile')}
           <input
             type="file"
-            accept=".csv,text/csv,text/plain"
+            accept=".csv,.xlsx,.xls,.ods,text/csv,text/plain"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];

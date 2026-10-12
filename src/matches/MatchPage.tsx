@@ -8,6 +8,8 @@ import { LiveScoring } from './LiveScoring';
 import { RosterEditor } from './RosterEditor';
 import { MatchStatsView } from '../stats/MatchStatsView';
 import { filterToParam } from '../video/clips';
+import { downloadMatchDvw } from '../dvw/exportMatch';
+import { exportMatchExcel } from '../stats/matchExcel';
 
 type Tab = 'live' | 'roster' | 'stats';
 
@@ -62,6 +64,16 @@ export function MatchPage() {
               {t('matches.takeOver')}
             </button>
           )}
+          <button className="btn btn-sm" onClick={() => downloadMatchDvw(m)} disabled={m.events.length === 0} title={t('dvw.exportHelp')}>
+            ⤒ DataVolley
+          </button>
+          <button
+            className="btn btn-sm"
+            onClick={() => void exportMatchExcel(m, t).catch((e: Error) => m.setError(e.message))}
+            disabled={m.events.length === 0}
+          >
+            ⤒ Excel
+          </button>
           {m.canCode && (
             <button className="btn btn-sm btn-danger" onClick={() => void onDelete()}>
               {t('common.delete')}
