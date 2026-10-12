@@ -390,7 +390,10 @@
     "ex3": "set by 3 and winning quick attack by away 11, from zone 3 to 8",
     "ex4": "serve error by home 12 (point for away)",
     "ex5": "full rally: the block by away 2 wins the point",
-    "doubleSigns": "You can also type ++ instead of # and -- instead of = (they are saved as # and =)."
+    "doubleSigns": "You can also type ++ instead of # and -- instead of = (they are saved as # and =).",
+    "videoTitle": "Video",
+    "videoToggle": "play / pause",
+    "videoSkip": "back / forward 3 s (with Shift, 10 s)"
   },
   "code": {
     "pickPlayer": "Tap a player on court (or choose Serve)",
@@ -422,5 +425,46 @@
     "import": "Import {{rows}} players",
     "result": "Done: {{teams}} new teams, {{created}} new players and {{updated}} updated.",
     "rowErrors": "Rows with errors:"
+  },
+  "video": {
+    "add": "Match video",
+    "title": "Video",
+    "youtube": "YouTube link",
+    "youtubePlaceholder": "Paste the YouTube link (https://youtu.be/…)",
+    "load": "Load",
+    "localFile": "Choose a video file",
+    "localHint": "Last file used: {{name}}",
+    "help": "With the video loaded, every action you code stores the video time. Local files are not uploaded: each device picks the file from its own disk.",
+    "badUrl": "The YouTube link was not recognised.",
+    "err": {
+      "youtube_api": "Could not load the YouTube player. Check your connection.",
+      "file": "This browser cannot play the file. Try an MP4 (H.264)."
+    },
+    "speed": "Speed",
+    "sync": "Sync",
+    "change": "Change video",
+    "synced_one": "{{count}} action synced.",
+    "synced_other": "{{count}} actions synced.",
+    "syncHelp": "If you coded the match without video (e.g. live), move the video to the exact moment of one of the actions (it is now at {{time}}) and choose it from the list. The other actions are placed according to the time they were coded.",
+    "syncOnlyMissing": "Only actions that have no time yet",
+    "goTo": "Show this play in the video",
+    "setTime": "Set the current video time on this action"
+  },
+  "clips": {
+    "title": "Filtered video",
+    "count_one": "{{count}} clip",
+    "count_other": "{{count}} clips",
+    "team": "Team",
+    "allTeams": "Both teams",
+    "player": "Player",
+    "allPlayers": "All players",
+    "set": "Set",
+    "allSets": "All sets",
+    "pointsOnly": "Point-scoring actions only",
+    "clear": "Clear filters",
+    "before": "Seconds before",
+    "after": "Seconds after",
+    "playAll": "Play all",
+    "none": "No action with a video time matches the filters."
   }
 }

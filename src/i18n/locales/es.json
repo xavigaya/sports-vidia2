@@ -390,7 +390,10 @@
     "ex3": "colocación del 3 y ataque rápido ganador del 11 visitante, de la zona 3 a la 8",
     "ex4": "error de saque del 12 local (punto para el visitante)",
     "ex5": "jugada completa: el bloqueo del 2 visitante suma el punto",
-    "doubleSigns": "También puedes escribir ++ en lugar de # y -- en lugar de = (se registran como # y =)."
+    "doubleSigns": "También puedes escribir ++ en lugar de # y -- en lugar de = (se registran como # y =).",
+    "videoTitle": "Vídeo",
+    "videoToggle": "reproducir / pausa",
+    "videoSkip": "atrás / adelante 3 s (con Mayús, 10 s)"
   },
   "code": {
     "pickPlayer": "Toca un jugador en el campo (o elige Saque)",
@@ -422,5 +425,46 @@
     "import": "Importar {{rows}} jugadores",
     "result": "Hecho: {{teams}} equipos nuevos, {{created}} jugadores nuevos y {{updated}} actualizados.",
     "rowErrors": "Filas con errores:"
+  },
+  "video": {
+    "add": "Vídeo del partido",
+    "title": "Vídeo",
+    "youtube": "Enlace de YouTube",
+    "youtubePlaceholder": "Pega el enlace de YouTube (https://youtu.be/…)",
+    "load": "Cargar",
+    "localFile": "Elige un archivo de vídeo",
+    "localHint": "Último archivo utilizado: {{name}}",
+    "help": "Con el vídeo cargado, cada acción que codifiques guarda el instante del vídeo. El archivo local no se sube a ningún sitio: cada dispositivo debe elegirlo de su disco.",
+    "badUrl": "No se ha reconocido el enlace de YouTube.",
+    "err": {
+      "youtube_api": "No se ha podido cargar el reproductor de YouTube. Comprueba la conexión.",
+      "file": "Este navegador no puede reproducir el archivo. Prueba con un MP4 (H.264)."
+    },
+    "speed": "Velocidad",
+    "sync": "Sincronizar",
+    "change": "Cambiar el vídeo",
+    "synced_one": "Se ha sincronizado {{count}} acción.",
+    "synced_other": "Se han sincronizado {{count}} acciones.",
+    "syncHelp": "Si has codificado el partido sin vídeo (por ejemplo, en directo), pon el vídeo en el instante exacto de una de las acciones (ahora está en {{time}}) y elígela en la lista. El resto de acciones se colocarán según la hora en que se codificaron.",
+    "syncOnlyMissing": "Solo las acciones que aún no tienen instante",
+    "goTo": "Mostrar la jugada en el vídeo",
+    "setTime": "Asignar el instante actual del vídeo a esta acción"
+  },
+  "clips": {
+    "title": "Vídeos filtrados",
+    "count_one": "{{count}} corte",
+    "count_other": "{{count}} cortes",
+    "team": "Equipo",
+    "allTeams": "Ambos equipos",
+    "player": "Jugador",
+    "allPlayers": "Todos los jugadores",
+    "set": "Set",
+    "allSets": "Todos los sets",
+    "pointsOnly": "Solo acciones de punto",
+    "clear": "Quitar filtros",
+    "before": "Segundos antes",
+    "after": "Segundos después",
+    "playAll": "Reproducir todos",
+    "none": "Ninguna acción con instante de vídeo coincide con los filtros."
   }
 }

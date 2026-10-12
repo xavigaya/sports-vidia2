@@ -22,6 +22,10 @@ import { Legend, EVAL_KEY } from './Legend';
 import { Court } from './Court';
 import { LineupForm } from './LineupForm';
 import type { UseMatch } from './useMatch';
+import { VideoPanel, sourceFromMatch } from '../video/VideoPanel';
+import { ClipsPanel } from '../video/ClipsPanel';
+import type { PlayerHandle, VideoSource } from '../video/VideoPlayer';
+import { formatTime } from '../video/youtube';
 
 const SIDES: Side[] = ['H', 'A'];
 
@@ -66,6 +70,15 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const cmdRef = useRef<HTMLInputElement>(null);
+  // Vídeo: cada acció desa l'instant on és el reproductor
+  const playerRef = useRef<PlayerHandle | null>(null);
+  const [source, setSource] = useState<VideoSource | null>(() => sourceFromMatch(match.video_url));
+  const videoTime = useCallback(() => (source ? (playerRef.current?.getTime() ?? null) : null), [source]);
+  const seekTo = (time: number | null | undefined) => {
+    if (time == null || !playerRef.current) return;
+    playerRef.current.seek(time - 3);
+    playerRef.current.play();
+  };
 
   const names: Record<SideCode, string> = { H: match.home.short_name ?? match.home.name, A: match.away.short_name ?? match.away.name };
   const colors: Record<SideCode, string> = {
@@ -86,7 +99,7 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const send = useCallback(
     async (ev: MatchEventData | ((s: MatchState) => MatchEventData)) => {
       setMessage(null);
-      const r = await m.append(ev);
+      const r = await m.append(ev, videoTime());
       if (!r.ok) {
         setMessage({ kind: 'error', text: engineErrorText(t, r.error) });
         return false;
@@ -104,7 +117,7 @@ export function LiveScoring({ m }: { m: UseMatch }) {
       if (infos.length) setMessage({ kind: 'info', text: infos.join(' ') });
       return true;
     },
-    [m, t, names],
+    [m, t, names, videoTime],
   );
 
   // Obre l'alineació automàticament quan toca
@@ -153,6 +166,11 @@ export function LiveScoring({ m }: { m: UseMatch }) {
   const log = useMemo(() => buildLog(m.events, state.rules), [m.events, state.rules]);
 
   return (
+    <div className={`live-layout ${source ? 'with-video' : ''}`}>
+      <div className="live-video">
+        <VideoPanel m={m} source={source} setSource={setSource} playerRef={playerRef} />
+        {source && <ClipsPanel events={m.events} rules={state.rules} playerRef={playerRef} names={names} players={playerMaps} />}
+      </div>
     <div className="live">
       {/* Marcador */}
       <section className="scoreboard card">
@@ -326,6 +344,30 @@ export function LiveScoring({ m }: { m: UseMatch }) {
                   </span>
                   <span className="mono log-code">{eventCode(row.ev)}</span>
                   <span>{describe(t, row.ev, names, playerMaps)}</span>
+                  {source && (
+                    <span className="log-time">
+                      <button
+                        className="btn-link mono small"
+                        disabled={row.ev.videoTime == null}
+                        onClick={() => seekTo(row.ev.videoTime)}
+                        title={t('video.goTo')}
+                      >
+                        {formatTime(row.ev.videoTime)}
+                      </button>
+                      {canCode && (
+                        <button
+                          className="btn-icon small"
+                          title={t('video.setTime')}
+                          onClick={() => {
+                            const now = playerRef.current?.getTime();
+                            if (now != null) void m.setEventTime(row.ev.seq, now);
+                          }}
+                        >
+                          ⏱
+                        </button>
+                      )}
+                    </span>
+                  )}
                 </li>
               ))}
           </ol>
@@ -345,7 +387,7 @@ export function LiveScoring({ m }: { m: UseMatch }) {
           initial={suggestNextLineup(state)}
           onCancel={() => setLineupOpen(false)}
           onSubmit={async (v) => {
-            const r = await m.append({ type: 'lineup', ...v });
+            const r = await m.append({ type: 'lineup', ...v }, videoTime());
             if (!r.ok) return engineErrorText(t, r.error);
             setLineupOpen(false);
             setMessage(null);
@@ -378,6 +420,7 @@ export function LiveScoring({ m }: { m: UseMatch }) {
           />
         )}
       </Modal>
+    </div>
     </div>
   );
 }

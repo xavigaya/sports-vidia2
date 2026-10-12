@@ -120,6 +120,8 @@ export interface Match {
   away_sets: number;
   set_scores: { h: number; a: number }[];
   coder_id: string | null;
+  video_url: string | null;
+  video_local_name: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;

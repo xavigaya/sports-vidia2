@@ -38,7 +38,15 @@ Aplicació per generar estadístiques de partits de voleibol a partir de vídeo 
 - Codificació d'accions de joc (S, R, E, A, B, D, F) amb qualificació, tipus, zones i trajectòria, per teclat (`*12SH#16`) o tàctil, i llegenda de codis.
 - Icona de l'aplicació.
 
-**Properes fases**: codificació de les accions de joc (servei, recepció, col·locació, atac, bloqueig, free ball) amb qualitat, zones i trajectòries; vídeo sincronitzat; estadístiques; importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android.
+**Fase 4 — Vídeo**
+
+- Vídeo del partit des d'un enllaç de YouTube o d'un fitxer local (el fitxer no es puja; cada dispositiu el tria del seu disc).
+- Cada acció codificada desa l'instant del vídeo; des del registre es pot saltar a la jugada o corregir-ne l'instant.
+- Sincronització d'un partit codificat en directe sense vídeo, a partir d'una sola acció.
+- Vídeos filtrats per equip, jugador, set, fonament, qualificació o accions de punt, amb marge abans i després configurable i reproducció seguida.
+- Controls tàctils i dreceres de teclat (Ctrl+Espai, Ctrl+←/→).
+
+**Properes fases**: estadístiques; importació/exportació DataVolley i Excel; funcionament sense connexió; versions d'escriptori i Android; pujada de vídeos a YouTube.
 
 ## Tecnologia
 
@@ -99,5 +107,6 @@ src/teams/             Equips i plantilles
 src/players/           Jugadors
 src/engine/            Motor de partit (regles, rotacions, marcador) i codis
 src/matches/           Partits, convocatòria i marcador en directe
+src/video/             Reproductor (YouTube i local), sincronització i vídeos filtrats
 src/i18n/              Traduccions (ca.json és la referència)
 ```

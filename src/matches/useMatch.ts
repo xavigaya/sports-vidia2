@@ -193,6 +193,47 @@ export function useMatch(matchId: string) {
     if (rules) void syncSummary(replay(remaining, rules).state);
   }, [match, events, rules, syncSummary]);
 
+  // Canvia l'instant de vídeo d'un esdeveniment
+  const setEventTime = useCallback(
+    async (seq: number, time: number | null) => {
+      if (!match) return;
+      const { error } = await supabase.from('match_events').update({ video_time: time }).eq('match_id', match.id).eq('seq', seq);
+      if (error) setError(error.message);
+      else setEvents((list) => list.map((e) => (e.seq === seq ? { ...e, videoTime: time } : e)));
+    },
+    [match],
+  );
+
+  // Sincronitza tot el partit a partir d'una acció i el seu instant de vídeo
+  const syncVideo = useCallback(
+    async (seq: number, time: number, onlyMissing: boolean) => {
+      if (!match) return 0;
+      const { data, error } = await supabase.rpc('sync_match_video', {
+        p_match: match.id,
+        p_seq: seq,
+        p_time: time,
+        p_only_missing: onlyMissing,
+      });
+      if (error) {
+        setError(error.message);
+        return 0;
+      }
+      await loadEvents();
+      return (data as number) ?? 0;
+    },
+    [match, loadEvents],
+  );
+
+  const saveVideo = useCallback(
+    async (patch: { video_url?: string | null; video_local_name?: string | null }) => {
+      if (!match) return;
+      const { error } = await supabase.from('matches').update(patch).eq('id', match.id);
+      if (error) setError(error.message);
+      else setMatch((m) => (m ? { ...m, ...patch } : m));
+    },
+    [match],
+  );
+
   const claim = useCallback(async () => {
     if (!match) return;
     const { error } = await supabase.rpc('claim_match', { p_match: match.id });
@@ -214,6 +255,9 @@ export function useMatch(matchId: string) {
     append,
     undo,
     claim,
+    setEventTime,
+    syncVideo,
+    saveVideo,
     reloadMatch: loadMatch,
     reloadPlayers: loadPlayers,
   };

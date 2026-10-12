@@ -390,7 +390,10 @@
     "ex3": "col·locació del 3 i atac ràpid guanyador de l’11 visitant, de la zona 3 a la 8",
     "ex4": "error de servei del 12 local (punt per al visitant)",
     "ex5": "jugada completa: el bloqueig del 2 visitant suma el punt",
-    "doubleSigns": "També pots escriure ++ en lloc de # i -- en lloc de = (s’enregistren com a # i =)."
+    "doubleSigns": "També pots escriure ++ en lloc de # i -- en lloc de = (s’enregistren com a # i =).",
+    "videoTitle": "Vídeo",
+    "videoToggle": "reprodueix / pausa",
+    "videoSkip": "enrere / endavant 3 s (amb Maj, 10 s)"
   },
   "code": {
     "pickPlayer": "Toca un jugador al camp (o tria Servei)",
@@ -422,5 +425,46 @@
     "import": "Importa {{rows}} jugadors",
     "result": "Fet: {{teams}} equips nous, {{created}} jugadors nous i {{updated}} actualitzats.",
     "rowErrors": "Files amb errors:"
+  },
+  "video": {
+    "add": "Vídeo del partit",
+    "title": "Vídeo",
+    "youtube": "Enllaç de YouTube",
+    "youtubePlaceholder": "Enganxa l’enllaç de YouTube (https://youtu.be/…)",
+    "load": "Carrega",
+    "localFile": "Tria un fitxer de vídeo",
+    "localHint": "Últim fitxer utilitzat: {{name}}",
+    "help": "Amb el vídeo carregat, cada acció que codifiquis guarda l’instant del vídeo. El fitxer local no es puja enlloc: cada dispositiu l’ha de triar del seu disc.",
+    "badUrl": "No s’ha reconegut l’enllaç de YouTube.",
+    "err": {
+      "youtube_api": "No s’ha pogut carregar el reproductor de YouTube. Comprova la connexió.",
+      "file": "Aquest navegador no pot reproduir el fitxer. Prova amb un MP4 (H.264)."
+    },
+    "speed": "Velocitat",
+    "sync": "Sincronitza",
+    "change": "Canvia el vídeo",
+    "synced_one": "S’ha sincronitzat {{count}} acció.",
+    "synced_other": "S’han sincronitzat {{count}} accions.",
+    "syncHelp": "Si has codificat el partit sense vídeo (per exemple, en directe), posa el vídeo a l’instant exacte d’una de les accions (ara és a {{time}}) i tria-la a la llista. La resta d’accions es col·locaran segons l’hora en què es van codificar.",
+    "syncOnlyMissing": "Només les accions que encara no tenen instant",
+    "goTo": "Mostra la jugada al vídeo",
+    "setTime": "Assigna l’instant actual del vídeo a aquesta acció"
+  },
+  "clips": {
+    "title": "Vídeos filtrats",
+    "count_one": "{{count}} tall",
+    "count_other": "{{count}} talls",
+    "team": "Equip",
+    "allTeams": "Tots dos equips",
+    "player": "Jugador",
+    "allPlayers": "Tots els jugadors",
+    "set": "Set",
+    "allSets": "Tots els sets",
+    "pointsOnly": "Només accions de punt",
+    "clear": "Treu els filtres",
+    "before": "Segons abans",
+    "after": "Segons després",
+    "playAll": "Reprodueix-los tots",
+    "none": "Cap acció amb instant de vídeo coincideix amb els filtres."
   }
 }

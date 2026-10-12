@@ -117,6 +117,18 @@ export function Legend() {
       </section>
 
       <section>
+        <h3>{t('legend.videoTitle')}</h3>
+        <ul className="small legend-list">
+          <li>
+            <kbd>Ctrl</kbd>+<kbd>Espai</kbd> — {t('legend.videoToggle')}
+          </li>
+          <li>
+            <kbd>Ctrl</kbd>+<kbd>←</kbd> / <kbd>Ctrl</kbd>+<kbd>→</kbd> — {t('legend.videoSkip')}
+          </li>
+        </ul>
+      </section>
+
+      <section>
         <h3>{t('legend.examplesTitle')}</h3>
         <ul className="small legend-list">
           <li>
