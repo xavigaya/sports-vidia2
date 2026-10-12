@@ -58,7 +58,8 @@ export function PlayersPage() {
   async function onDelete(p: Player) {
     if (!window.confirm(t('common.confirmDelete'))) return;
     const { error } = await supabase.from('players').delete().eq('id', p.id);
-    if (error) setError(error.message);
+    // 23503: el jugador consta en partits jugats i no es pot esborrar
+    if (error) setError(error.code === '23503' ? t('players.inMatches') : error.message);
     await load();
   }
 

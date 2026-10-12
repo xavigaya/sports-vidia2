@@ -94,7 +94,8 @@ export function TeamDetailPage() {
     if (!team || !window.confirm(t('common.confirmDelete'))) return;
     const { error } = await supabase.from('teams').delete().eq('id', team.id);
     if (error) {
-      setError(error.message);
+      // 23503: l'equip ha jugat partits; es pot arxivar en lloc d'esborrar-lo
+      setError(error.code === '23503' ? t('teams.inMatches') : error.message);
       return;
     }
     navigate('/teams');

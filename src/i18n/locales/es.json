@@ -120,7 +120,8 @@
     "genericCount": "Número de jugadores",
     "genericLiberos": "Líberos (los últimos dorsales)",
     "genericFirst": "Nombre",
-    "genericLast": "Apellido"
+    "genericLast": "Apellido",
+    "inMatches": "No se puede eliminar este equipo porque tiene partidos. Si ya no lo usáis, edítalo y márcalo como archivado; o elimina antes sus partidos."
   },
   "players": {
     "title": "Jugadores",
@@ -144,7 +145,8 @@
     "numberTaken": "Este dorsal ya está asignado en este equipo.",
     "existingNoTeam": "Jugador sin equipo",
     "allTeams": "Todos los equipos",
-    "noTeam": "Sin equipo"
+    "noTeam": "Sin equipo",
+    "inMatches": "No se puede eliminar este jugador porque ha jugado partidos y sus estadísticas dependen de él. Si ya no está en el equipo, quítalo de la plantilla o desmárcalo como activo en la ficha del equipo."
   },
   "positions": {
     "S": "Colocador/a",

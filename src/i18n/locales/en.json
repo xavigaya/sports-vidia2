@@ -120,7 +120,8 @@
     "genericCount": "Number of players",
     "genericLiberos": "Liberos (last numbers)",
     "genericFirst": "Name",
-    "genericLast": "Surname"
+    "genericLast": "Surname",
+    "inMatches": "This team cannot be deleted because it has matches. If you no longer use it, edit it and mark it as archived, or delete its matches first."
   },
   "players": {
     "title": "Players",
@@ -144,7 +145,8 @@
     "numberTaken": "That number is already taken in this team.",
     "existingNoTeam": "Player without team",
     "allTeams": "All teams",
-    "noTeam": "No team"
+    "noTeam": "No team",
+    "inMatches": "This player cannot be deleted because they have played matches and their statistics depend on them. If they have left the team, remove them from the roster or untick “Active” on the team page."
   },
   "positions": {
     "S": "Setter",

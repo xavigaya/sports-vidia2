@@ -120,7 +120,8 @@
     "genericCount": "Nombre de jugadors",
     "genericLiberos": "Líberos (els darrers dorsals)",
     "genericFirst": "Nom",
-    "genericLast": "Cognom"
+    "genericLast": "Cognom",
+    "inMatches": "No es pot eliminar aquest equip perquè té partits. Si ja no l’utilitzeu, edita’l i marca’l com a arxivat; o elimina abans els seus partits."
   },
   "players": {
     "title": "Jugadors",
@@ -144,7 +145,8 @@
     "numberTaken": "Aquest dorsal ja està assignat en aquest equip.",
     "existingNoTeam": "Jugador sense equip",
     "allTeams": "Tots els equips",
-    "noTeam": "Sense equip"
+    "noTeam": "Sense equip",
+    "inMatches": "No es pot eliminar aquest jugador perquè ha jugat partits i les seves estadístiques en depenen. Si ja no és a l’equip, treu-lo de la plantilla o desmarca’l com a actiu a la fitxa de l’equip."
   },
   "positions": {
     "S": "Col·locador/a",
