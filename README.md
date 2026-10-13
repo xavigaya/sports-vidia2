@@ -120,7 +120,17 @@ npm install
 
 Si la versió nova porta un fitxer nou a `supabase/migrations/`, executa'l a l'SQL Editor de Supabase.
 
-### 4. Aplicacions instal·lables
+### 4. Versió web
+
+La versió de navegador es publica sola a **https://xavigaya.github.io/volei-vidia/** a cada canvi a `main`.
+
+Configuració (un sol cop):
+1. GitHub → **Settings → Pages → Source: GitHub Actions**.
+2. GitHub → **Settings → Secrets and variables → Actions → Variables**: crea `SUPABASE_URL` i `SUPABASE_ANON_KEY` (la clau *publishable*). Així la web i les aplicacions ja vénen connectades al servidor del club.
+3. Supabase → **Authentication → URL Configuration**: *Site URL* `https://xavigaya.github.io/volei-vidia/` i, a *Redirect URLs*, afegeix `https://xavigaya.github.io/volei-vidia/**` i `http://localhost:5173/**`.
+4. Per pujar vídeos a YouTube des de la web, a Google Cloud afegeix `https://xavigaya.github.io` als *Authorized JavaScript origins* del client OAuth.
+
+### 5. Aplicacions instal·lables
 
 Descarrega-les de la pàgina **Releases** del repositori de GitHub:
 
@@ -132,7 +142,7 @@ Per compilar-les tu mateix: `npm run desktop:build` (cal [Rust](https://rustup.r
 
 Per publicar una versió nova: canvia `"version"` a `package.json` (p. ex. `0.8.1`) i puja-ho a `main`.
 
-### 5. YouTube
+### 6. YouTube
 
 A **Configuració** del club hi ha els passos per crear l'ID de client OAuth de Google i indicar la llista de reproducció. Mentre el projecte de Google no estigui verificat, YouTube deixa els vídeos pujats en privat; la visibilitat es pot canviar després a YouTube Studio.
 

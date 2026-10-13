@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { clearServerConfig, serverFromBuild, serverUrl, supabase } from '../lib/supabase';
+import { clearServerConfig, serverFromBuild, serverUrl, supabase, runtimePlatform } from '../lib/supabase';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ErrorBox } from '../components/ui';
 
@@ -27,7 +27,11 @@ export function LoginPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { display_name: displayName } },
+          options: {
+            data: { display_name: displayName },
+            // L'enllaç de confirmació torna a aquesta mateixa adreça web
+            emailRedirectTo: runtimePlatform() === 'web' ? window.location.origin + window.location.pathname : undefined,
+          },
         });
         if (error) throw error;
         if (!data.session) setInfo(t('auth.checkEmail'));
