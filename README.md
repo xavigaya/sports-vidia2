@@ -79,6 +79,15 @@ Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir
 - Les aplicacions es compilen soles a GitHub quan canvia la versió de `package.json` a la branca `main` (o amb una etiqueta `v…`) i queden a la pàgina *Releases*.
 - La primera vegada, l'aplicació demana l'adreça i la clau pública del servidor Supabase (o es poden incloure a la compilació amb les variables `SUPABASE_URL` i `SUPABASE_ANON_KEY` del repositori).
 - Pujada de vídeos locals al canal de YouTube del club, amb llista de reproducció i visibilitat configurables, pujada reprenible amb progrés i comprovació dels consentiments d'imatge dels menors. Es fa des de la versió web.
+- Versió web publicada a GitHub Pages.
+
+**Fase 9 — Informes en PDF**
+
+- *Informe del partit* (semblant al *Match Report* de Click&Scout): dades del partit, durada i parcials (8, 16, 21) de cada set, participació de cada jugador a cada set (posició inicial, col·locador titular, suplents i líberos, primer servei), punts, break-points, guanyats-perduts, servei, recepció, atac i bloqueig per jugador, equip i set, i punts guanyats per servei, atac, bloqueig i errors del rival.
+- *Estadístiques generals* (semblant a la *General Statistics* de Click&Scout): recompte de cada valoració de servei, recepció, atac i bloqueig, amb #% i *E% (fórmules de Click&Scout). A la pantalla i en PDF, per partit i acumulades per temporada.
+- Els PDF es generen dins l'aplicació, sense connexió i sense biblioteques externes.
+- Dades noves del partit (opcionals): ciutat, espectadors i àrbitres (botó *✎ Dades*). L'entrenador/a i l'ajudant surten de la fitxa de cada equip.
+- A la tauleta Android, els fitxers exportats (PDF, Excel, DataVolley, CSV) s'obren amb el menú *Compartir* del sistema per desar-los o enviar-los.
 
 ## Tecnologia
 

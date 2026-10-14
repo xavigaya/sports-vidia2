@@ -670,3 +670,24 @@ h3 { margin: 0; font-size: 1rem; }
 .progress-bar { height: 100%; background: var(--brand); transition: width 0.3s; }
 .howto { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 textarea { font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; width: 100%; resize: vertical; }
+
+/* Estadístiques generals (format Click&Scout) */
+.general-stats th, .general-stats td { padding: 6px 5px; }
+.general-stats .group-start { border-left: 1px solid var(--line); }
+.general-stats .group-row th { text-align: center; }
+.general-stats .formula { text-align: center; }
+
+/* Menú desplegable de botons (PDF…) */
+.menu { position: relative; display: inline-block; }
+.menu > summary { list-style: none; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu-items {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 220px;
+  display: flex; flex-direction: column; padding: 6px; gap: 2px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+}
+.menu-items button {
+  text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 6px; color: inherit; font: inherit; cursor: pointer;
+}
+.menu-items button:hover { background: var(--surface-2); }

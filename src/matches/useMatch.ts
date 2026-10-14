@@ -17,7 +17,7 @@ import { enqueue, flush, getOps, subscribe } from '../offline/outbox';
 import { mergePending, type EventRowPayload } from '../offline/queue';
 
 export const MATCH_SELECT =
-  '*, home:teams!matches_home_team_id_fkey(id, name, short_name, code, color, is_own), away:teams!matches_away_team_id_fkey(id, name, short_name, code, color, is_own)';
+  '*, home:teams!matches_home_team_id_fkey(id, name, short_name, code, color, is_own, coach, assistant), away:teams!matches_away_team_id_fkey(id, name, short_name, code, color, is_own, coach, assistant)';
 
 export function rulesOf(
   m: Pick<MatchWithTeams, 'sets_to_win' | 'points_per_set' | 'tiebreak_points' | 'max_substitutions' | 'timeouts_per_set' | 'lenient_actions'>,
@@ -32,8 +32,10 @@ export function rulesOf(
   };
 }
 
-export function rowToEvent(r: Pick<MatchEventRow, 'seq' | 'set_number' | 'type' | 'data' | 'video_time'>): MatchEvent {
-  return { ...(r.data as object), type: r.type, seq: r.seq, set: r.set_number, videoTime: r.video_time } as MatchEvent;
+export function rowToEvent(
+  r: Pick<MatchEventRow, 'seq' | 'set_number' | 'type' | 'data' | 'video_time'> & { created_at?: string | null },
+): MatchEvent {
+  return { ...(r.data as object), type: r.type, seq: r.seq, set: r.set_number, videoTime: r.video_time, at: r.created_at ?? null } as MatchEvent;
 }
 
 function eventToData(ev: MatchEventData): Record<string, unknown> {
@@ -74,7 +76,7 @@ export function useMatch(matchId: string) {
 
   const loadEvents = useCallback(async () => {
     const r = await cached(`events:${matchId}`, () =>
-      supabase.from('match_events').select('seq, set_number, type, data, video_time').eq('match_id', matchId).order('seq'),
+      supabase.from('match_events').select('seq, set_number, type, data, video_time, created_at').eq('match_id', matchId).order('seq'),
     );
     if (r.error) {
       setError(r.error.message);
@@ -172,7 +174,8 @@ export function useMatch(matchId: string) {
       }
       const seq = state.lastSeq + 1;
       const set = ev.type === 'lineup' ? state.currentSet + 1 : state.currentSet;
-      const newEvent = { ...ev, seq, set, videoTime } as MatchEvent;
+      const at = new Date().toISOString();
+      const newEvent = { ...ev, seq, set, videoTime, at } as MatchEvent;
       next.lastSeq = seq;
       stateRef.current = next;
       setEvents((list) => [...list, newEvent]);
@@ -186,7 +189,7 @@ export function useMatch(matchId: string) {
         data: eventToData(ev),
         video_time: videoTime,
         created_by: user?.id ?? null,
-        created_at: new Date().toISOString(),
+        created_at: at,
       };
       busy.current = true;
       await enqueue({ kind: 'insert_event', matchId: match.id, seq, row });
@@ -242,14 +245,25 @@ export function useMatch(matchId: string) {
     [match, loadEvents],
   );
 
-  const saveVideo = useCallback(
-    async (patch: { video_url?: string | null; video_local_name?: string | null }) => {
-      if (!match) return;
+  // Canvia dades del partit (vídeo, data, competició, àrbitres…). Retorna l'error, si n'hi ha.
+  const updateMatch = useCallback(
+    async (patch: Partial<Pick<MatchWithTeams, 'video_url' | 'video_local_name' | 'played_at' | 'competition' | 'phase' | 'venue' | 'city' | 'spectators' | 'referees'>>) => {
+      if (!match) return 'not_loaded';
       const { error } = await supabase.from('matches').update(patch).eq('id', match.id);
-      if (error) setError(error.message);
-      else setMatch((m) => (m ? { ...m, ...patch } : m));
+      if (error) {
+        setError(error.message);
+        return error.message;
+      }
+      setMatch((m) => (m ? { ...m, ...patch } : m));
+      return null;
     },
     [match],
+  );
+  const saveVideo = useCallback(
+    async (patch: { video_url?: string | null; video_local_name?: string | null }) => {
+      await updateMatch(patch);
+    },
+    [updateMatch],
   );
 
   const claim = useCallback(async () => {
@@ -278,6 +292,7 @@ export function useMatch(matchId: string) {
     setEventTime,
     syncVideo,
     saveVideo,
+    updateMatch,
     reloadMatch: loadMatch,
     reloadPlayers: loadPlayers,
   };

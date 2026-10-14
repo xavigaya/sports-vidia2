@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { ErrorBox, Spinner } from '../components/ui';
+import { ErrorBox, Modal, Spinner } from '../components/ui';
+import { Menu } from '../components/Menu';
+import { MatchInfoForm } from './MatchInfoForm';
+import { exportMatchGeneralPdf, exportMatchReportPdf } from '../reports/exportReports';
 import { useMatch } from './useMatch';
 import { useClub } from '../club/ClubProvider';
 import { LiveScoring } from './LiveScoring';
@@ -22,6 +26,7 @@ export function MatchPage() {
   const [params, setParams] = useSearchParams();
   const tabParam = params.get('tab');
   const tab: Tab = tabParam === 'roster' || tabParam === 'stats' ? tabParam : 'live';
+  const [editing, setEditing] = useState(false);
 
   if (m.loading) return <Spinner />;
   if (!m.match || !m.state) return <ErrorBox message={m.error ?? '404'} />;
@@ -48,7 +53,9 @@ export function MatchPage() {
           <h1>
             {match.home.name} <span className="muted">–</span> {match.away.name}
           </h1>
-          <div className="muted small">{[date, match.competition, match.phase, match.venue].filter(Boolean).join(' · ')}</div>
+          <div className="muted small">
+            {[date, match.competition, match.phase, match.venue, match.city].filter(Boolean).join(' · ')}
+          </div>
         </div>
         <div className="row wrap">
           {!m.canCode && (
@@ -64,7 +71,20 @@ export function MatchPage() {
               {t('matches.takeOver')}
             </button>
           )}
-          <button className="btn btn-sm" onClick={() => downloadMatchDvw(m)} disabled={m.events.length === 0} title={t('dvw.exportHelp')}>
+          {m.canCode && (
+            <button className="btn btn-sm" onClick={() => setEditing(true)}>
+              {t('matchInfo.edit')}
+            </button>
+          )}
+          <Menu
+            label={`⤒ ${t('report.pdf')}`}
+            disabled={m.events.length === 0}
+            items={[
+              { label: t('report.matchReport'), onSelect: () => void exportMatchReportPdf(m, t).catch((e: Error) => m.setError(e.message)) },
+              { label: t('report.general'), onSelect: () => void exportMatchGeneralPdf(m, t).catch((e: Error) => m.setError(e.message)) },
+            ]}
+          />
+          <button className="btn btn-sm" onClick={() => void downloadMatchDvw(m).catch((e: Error) => m.setError(e.message))} disabled={m.events.length === 0} title={t('dvw.exportHelp')}>
             ⤒ DataVolley
           </button>
           <button
@@ -98,6 +118,10 @@ export function MatchPage() {
           {t('matches.tabRoster')} <span className="muted">({m.players.length})</span>
         </button>
       </div>
+
+      <Modal title={t('matchInfo.title')} open={editing} onClose={() => setEditing(false)}>
+        {editing && <MatchInfoForm m={m} onDone={() => setEditing(false)} />}
+      </Modal>
 
       {m.fromCache && <div className="notice small">{t('offline.cachedData')}</div>}
       {m.error && <ErrorBox message={m.error} />}

@@ -1,4 +1,5 @@
 // Excel (.xlsx) amb SheetJS. La biblioteca es carrega només quan cal.
+import { saveFile } from './download';
 export type Cell = string | number | boolean | null | undefined;
 export interface Sheet {
   name: string;
@@ -29,7 +30,9 @@ export async function downloadXlsx(filename: string, sheets: Sheet[]) {
     if (s.widths) ws['!cols'] = s.widths.map((w) => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws, sheetName(s.name, used));
   }
-  XLSX.writeFile(wb, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`, { compression: true });
+  const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true }) as ArrayBuffer;
+  const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  await saveFile(filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`, blob);
 }
 
 // Primer full d'un fitxer Excel com a files de text

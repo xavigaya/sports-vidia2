@@ -9,6 +9,8 @@ import type { Side } from '../engine/match';
 import { addSkills, addTeam, addZones, computeMatchStats, emptyLine, emptyTeamStats, type Line, type TeamStats } from './compute';
 import { PlayerTable, RotationTable, TeamSummary, ZoneMap, type PlayerRow } from './StatsTables';
 import { downloadStatsWorkbook, playersSheet, rotationsSheet, teamSummaryRows } from './excel';
+import { GeneralStatsTable } from '../reports/GeneralStatsTable';
+import { exportSeasonGeneralPdf } from '../reports/exportReports';
 
 // Llegeix totes les files (Supabase en retorna com a màxim 1000 per petició)
 async function fetchAllEvents(matchIds: string[]): Promise<MatchEventRow[]> {
@@ -17,7 +19,7 @@ async function fetchAllEvents(matchIds: string[]): Promise<MatchEventRow[]> {
   for (let from = 0; ; from += page) {
     const { data, error } = await supabase
       .from('match_events')
-      .select('match_id, seq, set_number, type, data, video_time')
+      .select('match_id, seq, set_number, type, data, video_time, created_at')
       .in('match_id', matchIds)
       .order('match_id')
       .order('seq')
@@ -189,6 +191,27 @@ export function TeamStatsPage() {
             >
               ⤒ Excel
             </button>
+            <button
+              className="btn"
+              disabled={!agg || !team}
+              title={t('report.general')}
+              onClick={() => {
+                if (!agg || !team) return;
+                const seasonName = seasons.find((s) => s.id === seasonId)?.name ?? t('stats.allSeasons');
+                void exportSeasonGeneralPdf(
+                  {
+                    teamName: team.name,
+                    subtitle: seasonName,
+                    lines: [t('report.seasonLine', { n: selected.size, record: t('stats.record', { won: agg.won, lost: agg.lost }) })],
+                    rows: agg.players.map((p) => ({ label: `${p.number ?? ''} ${p.name}`.trim(), skills: p.line.skills })),
+                    total: agg.team.skills,
+                  },
+                  t,
+                ).catch((e: Error) => setError(e.message));
+              }}
+            >
+              ⤒ {t('report.pdf')}
+            </button>
             <select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} aria-label={t('teams.season')}>
               <option value="">{t('stats.allSeasons')}</option>
               {seasons.map((s) => (
@@ -258,6 +281,14 @@ export function TeamStatsPage() {
                   total={{ key: 'total', number: null, name: t('stats.teamTotal'), line: agg.team }}
                   showMatches
                 />
+              </section>
+              <section className="card stack">
+                <h2>{t('report.general')}</h2>
+                <GeneralStatsTable
+                  rows={agg.players.map((p) => ({ key: p.key, label: `${p.number ?? ''} ${p.name}`.trim(), skills: p.line.skills }))}
+                  total={agg.team.skills}
+                />
+                <p className="small muted">{t('report.generalHelp')}</p>
               </section>
               <div className="grid-2">
                 <section className="card stack">

@@ -113,6 +113,9 @@ export interface Match {
   competition: string | null;
   phase: string | null;
   venue: string | null;
+  city?: string | null;
+  spectators?: number | null;
+  referees?: string | null;
   status: MatchStatus;
   sets_to_win: number;
   points_per_set: number;
@@ -133,8 +136,8 @@ export interface Match {
 }
 
 export type MatchWithTeams = Match & {
-  home: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'>;
-  away: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'>;
+  home: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'> & Partial<Pick<Team, 'coach' | 'assistant'>>;
+  away: Pick<Team, 'id' | 'name' | 'short_name' | 'code' | 'color' | 'is_own'> & Partial<Pick<Team, 'coach' | 'assistant'>>;
 };
 
 export interface MatchPlayer {

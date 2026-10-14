@@ -8,6 +8,7 @@ import { rulesOf } from '../matches/useMatch';
 import type { ClipFilter } from '../video/clips';
 import { computeMatchStats, emptyLine } from './compute';
 import { PlayerTable, RotationTable, TeamSummary, ZoneMap, type PlayerRow } from './StatsTables';
+import { GeneralStatsTable } from '../reports/GeneralStatsTable';
 
 export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (f: Partial<ClipFilter>) => void }) {
   const { t } = useTranslation();
@@ -94,6 +95,17 @@ export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (
           }
         />
         <p className="small muted">{t('stats.clickHelp')}</p>
+      </section>
+
+      <section className="card stack">
+        <h2>
+          {t('report.general')} · {names[side]}
+        </h2>
+        <GeneralStatsTable
+          rows={rows.map((r) => ({ key: r.key, label: `${r.number ?? ''} ${r.name}`.trim(), skills: r.line.skills }))}
+          total={stats.teams[side].skills}
+        />
+        <p className="small muted">{t('report.generalHelp')}</p>
       </section>
 
       <div className="grid-2">

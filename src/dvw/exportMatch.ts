@@ -4,7 +4,7 @@ import { rulesOf } from '../matches/useMatch';
 import { downloadBlob, safeFilename } from '../lib/csv';
 import { encodeLatin1, exportDvw } from './dvw';
 
-export function downloadMatchDvw(m: UseMatch) {
+export function downloadMatchDvw(m: UseMatch): Promise<void> {
   const match = m.match!;
   const players = (side: 'H' | 'A') =>
     m.players
@@ -24,8 +24,8 @@ export function downloadMatchDvw(m: UseMatch) {
     league: match.competition ?? '',
     phase: match.phase ?? '',
     teams: [
-      { code: match.home.code ?? '', name: match.home.name, coach: '', assistant: '' },
-      { code: match.away.code ?? '', name: match.away.name, coach: '', assistant: '' },
+      { code: match.home.code ?? '', name: match.home.name, coach: match.home.coach ?? '', assistant: match.home.assistant ?? '' },
+      { code: match.away.code ?? '', name: match.away.name, coach: match.away.coach ?? '', assistant: match.away.assistant ?? '' },
     ],
     players: { H: players('H'), A: players('A') },
     events: m.events,
@@ -34,5 +34,5 @@ export function downloadMatchDvw(m: UseMatch) {
   });
   const day = match.played_at ? match.played_at.slice(0, 10) : 'partit';
   const name = `${day} ${safeFilename(match.home.short_name ?? match.home.name)}-${safeFilename(match.away.short_name ?? match.away.name)}.dvw`;
-  downloadBlob(name, new Blob([encodeLatin1(text)], { type: 'text/plain;charset=windows-1252' }));
+  return downloadBlob(name, new Blob([encodeLatin1(text)], { type: 'text/plain;charset=windows-1252' }));
 }

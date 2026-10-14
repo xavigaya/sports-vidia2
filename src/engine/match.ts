@@ -61,6 +61,7 @@ export type MatchEvent = MatchEventData & {
   seq: number;
   set: number;
   videoTime?: number | null;
+  at?: string | null; // moment en què es va desar (ISO)
 };
 
 export interface LiberoOnCourt {
