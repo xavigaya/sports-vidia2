@@ -4,6 +4,7 @@ import { cached } from '../offline/store';
 import { useAuth } from '../auth/AuthProvider';
 import type { Club, ClubRole, Membership } from '../lib/types';
 import { applyClubTheme } from './theme';
+import { setAuditClub } from '../lib/audit';
 
 interface ClubState {
   loading: boolean;
@@ -13,6 +14,9 @@ interface ClubState {
   role: ClubRole | null;
   canEdit: boolean; // admin o analista
   isAdmin: boolean;
+  isSuperadmin: boolean;
+  // El superadministrador és dins d'un club del qual no és membre
+  virtual: boolean;
   selectClub: (clubId: string | null) => void;
   refresh: () => Promise<void>;
 }
@@ -42,6 +46,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(readStored());
 
   const refresh = useCallback(async () => {
@@ -58,12 +63,21 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     const { data, error } = await cached(`memberships:${user.id}`, () =>
       supabase.from('club_members').select('club_id, role, clubs(*)').eq('user_id', user.id),
     );
+    // Superadministrador: té accés a tots els clubs
+    const prof = await cached(`profile:${user.id}`, () => supabase.from('profiles').select('is_superadmin').eq('id', user.id).maybeSingle());
+    const superadmin = !!(prof.data as { is_superadmin?: boolean } | null)?.is_superadmin;
+    setIsSuperadmin(superadmin);
     if (error) {
       setError(error.message);
     } else {
-      const list = ((data ?? []) as unknown as Membership[])
-        .filter((m) => m.clubs)
-        .sort((a, b) => a.clubs.name.localeCompare(b.clubs.name));
+      const list = ((data ?? []) as unknown as Membership[]).filter((m) => m.clubs);
+      if (superadmin) {
+        const all = await cached(`allclubs:${user.id}`, () => supabase.from('clubs').select('*').order('name'));
+        for (const c of (all.data ?? []) as Club[]) {
+          if (!list.some((m) => m.club_id === c.id)) list.push({ club_id: c.id, role: 'admin', clubs: c, virtual: true });
+        }
+      }
+      list.sort((a, b) => a.clubs.name.localeCompare(b.clubs.name));
       setMemberships(list);
     }
     setLoading(false);
@@ -82,6 +96,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyClubTheme(current?.clubs ?? null);
+    setAuditClub(current?.club_id ?? null);
   }, [current]);
 
   const selectClub = useCallback((id: string | null) => {
@@ -98,6 +113,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     role,
     canEdit: role === 'admin' || role === 'analyst',
     isAdmin: role === 'admin',
+    isSuperadmin,
+    virtual: !!current?.virtual,
     selectClub,
     refresh,
   };

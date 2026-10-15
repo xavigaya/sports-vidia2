@@ -8,6 +8,7 @@ import type { Season, Team } from '../lib/types';
 import type { Side } from '../engine/match';
 import { ErrorBox } from '../components/ui';
 import { decodeDvw, dvwToEvents, parseDvw, type ParsedDvw } from './dvw';
+import { logAction } from '../lib/audit';
 import { guessTeam, importDvwMatch, type TeamChoice } from './importDvw';
 
 export function DvwImport({ onCancel }: { onCancel: () => void }) {
@@ -74,6 +75,7 @@ export function DvwImport({ onCancel }: { onCancel: () => void }) {
     setError(null);
     try {
       const r = await importDvwMatch(dv, { clubId: club.id, userId: user?.id ?? null, seasonId: seasonId || null, choices });
+      logAction('import', 'match', { entityId: r.matchId, summary: fileName });
       navigate(`/matches/${r.matchId}?tab=stats`);
     } catch (e) {
       setError((e as Error).message);

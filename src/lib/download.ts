@@ -8,6 +8,7 @@
 //    correu o WhatsApp…).
 // =====================================================================
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { logAction } from './audit';
 
 interface FilesystemPlugin {
   writeFile(o: { path: string; data: string; directory: 'CACHE' | 'DOCUMENTS' | 'DATA'; recursive?: boolean }): Promise<{ uri: string }>;
@@ -48,6 +49,7 @@ function browserDownload(filename: string, blob: Blob) {
 }
 
 export async function saveFile(filename: string, blob: Blob): Promise<void> {
+  logAction('export', 'file', { summary: filename });
   if (!isAndroidApp()) {
     browserDownload(filename, blob);
     return;

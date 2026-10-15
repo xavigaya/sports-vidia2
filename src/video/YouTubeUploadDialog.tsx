@@ -4,6 +4,7 @@ import { supabase, runtimePlatform } from '../lib/supabase';
 import { useCurrentClub } from '../club/ClubProvider';
 import { playerDisplayName, type Player } from '../lib/types';
 import type { UseMatch } from '../matches/useMatch';
+import { logAction } from '../lib/audit';
 import { addToPlaylist, authorizeYouTube, uploadVideo, type Privacy } from './youtubeUpload';
 
 type Step = 'form' | 'uploading' | 'done';
@@ -53,6 +54,7 @@ export function YouTubeUploadDialog({ m, file, onClose }: { m: UseMatch; file: F
       abort.current = new AbortController();
       const id = await uploadVideo({ token, file, title, description, privacy, onProgress: setProgress, signal: abort.current.signal });
       setVideoId(id);
+      logAction('upload', 'video', { entityId: match.id, summary: `https://youtu.be/${id}` });
       if (club.youtube_playlist_id) {
         try {
           await addToPlaylist(token, club.youtube_playlist_id, id);

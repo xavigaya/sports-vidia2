@@ -5,6 +5,7 @@ import { downloadText, toCsv } from '../lib/csv';
 import { isExcelFile, readFirstSheet } from '../lib/excel';
 import type { Season, Team } from '../lib/types';
 import { parseTeamCsv, EXPORT_HEADERS, type CsvParseResult } from './teamCsv';
+import { logAction } from '../lib/audit';
 import { importPlayers, type ImportSummary } from './importTeams';
 
 interface Props {
@@ -54,6 +55,10 @@ export function CsvImport({ clubId, targetTeam, seasons = [], onDone }: Props) {
     const summary = await importPlayers(parsed.rows, { clubId, targetTeam, newTeamsOwn, seasonId: seasonId || null });
     setBusy(false);
     setResult(summary);
+    logAction('import', 'players', {
+      summary: `${summary.teamsCreated} / ${summary.playersCreated} / ${summary.playersUpdated}`,
+      details: { teams: summary.teamsCreated, created: summary.playersCreated, updated: summary.playersUpdated, errors: summary.errors.length },
+    });
   }
 
   function downloadTemplate() {

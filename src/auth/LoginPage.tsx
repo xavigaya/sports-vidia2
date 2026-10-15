@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logAction } from '../lib/audit';
 import { clearServerConfig, serverFromBuild, serverUrl, supabase, runtimePlatform } from '../lib/supabase';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { ErrorBox } from '../components/ui';
@@ -23,6 +24,7 @@ export function LoginPage() {
       if (mode === 'signIn') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        logAction('login', 'session', { clubId: null });
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,

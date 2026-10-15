@@ -10,9 +10,11 @@ import { LanguagePicker } from '../components/LanguagePicker';
 export function ClubPicker() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
-  const { memberships, selectClub, refresh } = useClub();
+  const { memberships, selectClub, refresh, isSuperadmin } = useClub();
   const [name, setName] = useState('');
   const [shortName, setShortName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [join, setJoin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +22,12 @@ export function ClubPicker() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { data, error } = await supabase.rpc('create_club', { p_name: name.trim(), p_short_name: shortName.trim() });
+    const { data, error } = await supabase.rpc('create_club', {
+      p_name: name.trim(),
+      p_short_name: shortName.trim(),
+      p_admin_email: adminEmail.trim().toLowerCase() || null,
+      p_join: join,
+    });
     setBusy(false);
     if (error) {
       setError(error.message);
@@ -56,16 +63,17 @@ export function ClubPicker() {
                       </span>
                     )}
                     <span className="club-item-name">{m.clubs.name}</span>
-                    <span className="badge">{t(`roles.${m.role}`)}</span>
+                    <span className="badge">{m.virtual ? t('roles.superadmin') : t(`roles.${m.role}`)}</span>
                   </button>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <p className="notice">{t('club.noClubs')}</p>
+          <p className="notice">{isSuperadmin ? t('club.noClubsSuper') : t('club.noClubsInvite')}</p>
         )}
 
+        {isSuperadmin && (
         <form onSubmit={onCreate} className="stack create-club">
           <h2>{t('club.createTitle')}</h2>
           <div className="grid-2">
@@ -80,11 +88,22 @@ export function ClubPicker() {
               <input value={shortName} onChange={(e) => setShortName(e.target.value)} maxLength={12} />
             </label>
           </div>
+          <label className="field">
+            <span>
+              {t('admin.clubAdminEmail')} <em className="muted">({t('common.optional')})</em>
+            </span>
+            <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={join} onChange={(e) => setJoin(e.target.checked)} />
+            {t('admin.joinAsAdmin')}
+          </label>
           {error && <ErrorBox message={error} />}
           <button className="btn btn-primary" disabled={busy}>
             {t('common.create')}
           </button>
         </form>
+        )}
 
         <div className="auth-footer">
           <LanguagePicker />

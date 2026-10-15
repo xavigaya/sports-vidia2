@@ -15,6 +15,7 @@ import { TeamStatsPage } from './stats/TeamStatsPage';
 import { PlayersPage } from './players/PlayersPage';
 import { TeamDetailPage } from './teams/TeamDetailPage';
 import { TeamsPage } from './teams/TeamsPage';
+import { AdminPage } from './admin/AdminPage';
 import { saveServerConfig, supabaseConfigured } from './lib/supabase';
 import { useState, type FormEvent } from 'react';
 import { BallMark } from './auth/LoginPage';
@@ -59,6 +60,7 @@ function ClubGate() {
         <Route path="players" element={<PlayersPage />} />
         <Route path="members" element={<MembersPage />} />
         <Route path="settings" element={<ClubSettingsPage />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

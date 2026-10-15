@@ -27,6 +27,8 @@ export interface Membership {
   club_id: string;
   role: ClubRole;
   clubs: Club;
+  // Accés de superadministrador a un club del qual no és membre
+  virtual?: boolean;
 }
 
 export interface ClubMember {

@@ -89,6 +89,14 @@ Per fer-ho servir en un pavelló sense cobertura: obre el partit abans de sortir
 - Dades noves del partit (opcionals): ciutat, espectadors i àrbitres (botó *✎ Dades*). L'entrenador/a i l'ajudant surten de la fitxa de cada equip.
 - A la tauleta Android, els fitxers exportats (PDF, Excel, DataVolley, CSV) s'obren amb el menú *Compartir* del sistema per desar-los o enviar-los.
 
+**Fase 10 — Administració, registre i rendiment**
+
+- Perfil de **superadministrador**: veu i gestiona tots els clubs i usuaris sense ser-ne membre (i pot ser, a més, membre o administrador d'un club). Només els superadministradors poden crear clubs.
+- Pantalla *Administració*: clubs (crear amb administrador convidat, obrir, eliminar), usuaris (rols a cada club, afegir o treure de clubs, superadministradors) i invitacions de tots els clubs.
+- **Registre d'accions** automàtic (altes, modificacions i baixes de clubs, usuaris, equips, jugadors, plantilles, partits i convocatòries; inici de cada set i desfer) i des de l'aplicació (inicis de sessió, exportacions, importacions, pujades a YouTube). Només per a superadministradors, amb filtres, detall dels canvis i exportació a Excel. Es conserva 3 mesos.
+- Estadístiques del partit: selector *El nostre equip / Rival* per a totes les seccions.
+- **Gràfica de teranyina** (8 eixos: servei, recepció, atac, eficàcia d'atac, bloqueig, defensa, side-out i break-point) al partit (els dos equips superposats), a les estadístiques acumulades i com a segona pàgina de l'informe del partit en PDF.
+
 ## Tecnologia
 
 - React + TypeScript + Vite (una sola base de codi per a totes les plataformes).

@@ -15,11 +15,12 @@ const NAV = [
   { to: '/members', key: 'members', icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z' },
   { to: '/settings', key: 'settings', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12l2-1-2-4-2 1-2-1V5h-4v2L9 8 7 7 5 11l2 1v2l-2 1 2 4 2-1 2 1v2h4v-2l2-1 2 1 2-4-2-1z' },
 ] as const;
+const ADMIN_ICON = 'M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.4l-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z M5 21h14';
 
 export function AppShell() {
   const { t } = useTranslation();
   const club = useCurrentClub();
-  const { role, memberships, selectClub } = useClub();
+  const { role, memberships, selectClub, isSuperadmin, virtual } = useClub();
   const { user, signOut } = useAuth();
   const logo = publicLogoUrl(club.logo_path);
 
@@ -34,7 +35,7 @@ export function AppShell() {
           )}
           <div className="club-head-text">
             <strong>{club.short_name ?? club.name}</strong>
-            {role && <small>{t(`roles.${role}`)}</small>}
+            {role && <small>{virtual ? t('roles.superadmin') : t(`roles.${role}`)}</small>}
           </div>
         </div>
 
@@ -47,6 +48,14 @@ export function AppShell() {
               <span>{t(`nav.${n.key}`)}</span>
             </NavLink>
           ))}
+          {isSuperadmin && (
+            <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path d={ADMIN_ICON} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+              </svg>
+              <span>{t('nav.admin')}</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="sidebar-foot">

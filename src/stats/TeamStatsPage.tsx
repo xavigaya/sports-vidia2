@@ -11,6 +11,8 @@ import { PlayerTable, RotationTable, TeamSummary, ZoneMap, type PlayerRow } from
 import { downloadStatsWorkbook, playersSheet, rotationsSheet, teamSummaryRows } from './excel';
 import { GeneralStatsTable } from '../reports/GeneralStatsTable';
 import { exportSeasonGeneralPdf } from '../reports/exportReports';
+import { RadarChart } from './RadarChart';
+import { radarValues } from './radar';
 
 // Llegeix totes les files (Supabase en retorna com a màxim 1000 per petició)
 async function fetchAllEvents(matchIds: string[]): Promise<MatchEventRow[]> {
@@ -36,6 +38,7 @@ interface Aggregate {
   players: PlayerRow[];
   won: number;
   lost: number;
+  sets: number;
 }
 
 export function TeamStatsPage() {
@@ -112,6 +115,7 @@ export function TeamStatsPage() {
       const lines = new Map<string, { number: number; name: string; line: Line; matches: number }>();
       let won = 0;
       let lost = 0;
+      let setsPlayed = 0;
       for (const match of chosen) {
         const side: Side = match.home_team_id === teamId ? 'H' : 'A';
         const players = allPlayers.filter((p) => p.match_id === match.id);
@@ -132,6 +136,7 @@ export function TeamStatsPage() {
           cur.number = Number(num);
           lines.set(key, cur);
         }
+        setsPlayed += (match.set_scores ?? []).filter((x) => x.h + x.a > 0).length || match.home_sets + match.away_sets;
         const mine = side === 'H' ? match.home_sets : match.away_sets;
         const theirs = side === 'H' ? match.away_sets : match.home_sets;
         if (match.status === 'finished') {
@@ -142,7 +147,7 @@ export function TeamStatsPage() {
       const players: PlayerRow[] = [...lines.entries()]
         .map(([key, v]) => ({ key, number: v.number, name: v.name, line: v.line, matches: v.matches }))
         .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
-      if (!cancelled) setAgg({ team, players, won, lost });
+      if (!cancelled) setAgg({ team, players, won, lost, sets: setsPlayed });
     })()
       .catch((e: Error) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -274,6 +279,11 @@ export function TeamStatsPage() {
                 color={team.color ?? club.primary_color}
                 sets={t('stats.record', { won: agg.won, lost: agg.lost })}
               />
+              <section className="card stack">
+                <h2>{t('radar.title')}</h2>
+                <RadarChart series={[{ name: team.name, color: team.color ?? club.primary_color, values: radarValues(agg.team, agg.sets) }]} />
+                <p className="small muted">{t('radar.help')}</p>
+              </section>
               <section className="card stack">
                 <h2>{t('stats.players')}</h2>
                 <PlayerTable

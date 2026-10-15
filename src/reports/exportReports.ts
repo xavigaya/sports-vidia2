@@ -11,6 +11,9 @@ import { computeMatchStats, type SkillCounts } from '../stats/compute';
 import { drawGeneralStats, type GsHeader, type GsLabels, type GsRow, type GsTeam } from './generalStatsPdf';
 import { drawMatchReport, type MrLabels, type MrTeam } from './matchReportPdf';
 import { computeMatchReport } from './reportData';
+import { drawRadarPage } from './radarPdf';
+import { RADAR_AXES, radarValues, type RadarKey } from '../stats/radar';
+import { ownSide, sideColors } from '../stats/teamColors';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 export function dateParts(iso: string | null | undefined): { date: string; time: string } {
@@ -132,7 +135,7 @@ export async function exportMatchGeneralPdf(m: UseMatch, t: TFunction) {
   await saveFile(`${matchFileBase(match)} ${safeFilename(t('report.general'))}.pdf`, doc.toBlob());
 }
 
-export async function exportMatchReportPdf(m: UseMatch, t: TFunction) {
+export async function exportMatchReportPdf(m: UseMatch, t: TFunction, clubColor = '#0b5cab') {
   const match = m.match!;
   const report = computeMatchReport(m.events, rulesOf(match), { setters: settersOf(m.players) });
   const { date, time } = dateParts(match.played_at);
@@ -163,6 +166,28 @@ export async function exportMatchReportPdf(m: UseMatch, t: TFunction) {
       report,
     },
     reportLabels(t),
+  );
+
+  // Segona pàgina: gràfica de rendiment dels dos equips (primer el nostre)
+  const st = computeMatchStats(m.events, rulesOf(match), { setters: settersOf(m.players) });
+  const setsPlayed = report.sets.filter((s) => s.home + s.away > 0).length;
+  const colors = sideColors(match.home, match.away, clubColor);
+  const first = ownSide(match.home, match.away);
+  const order: Side[] = first === 'H' ? ['H', 'A'] : ['A', 'H'];
+  const axes = Object.fromEntries(RADAR_AXES.map((a) => [a.key, t(`radar.${a.key}`)])) as Record<RadarKey, string>;
+  const help = Object.fromEntries(RADAR_AXES.map((a) => [a.key, t(`radar.${a.key}Help`)])) as Record<RadarKey, string>;
+  drawRadarPage(
+    doc,
+    order.map((s) => ({ name: s === 'H' ? match.home.name : match.away.name, color: colors[s], values: radarValues(st.teams[s], setsPlayed) })),
+    {
+      title: t('radar.pdfTitle'),
+      subtitle: [`${match.home.name} ${report.setsWon.H} – ${report.setsWon.A} ${match.away.name}`, date, match.competition].filter(Boolean).join(' · '),
+      axes,
+      help,
+      scale: t('radar.scale'),
+      note: t('radar.pdfNote'),
+      footer: t('report.footer', { date: today() }),
+    },
   );
   await saveFile(`${matchFileBase(match)} ${safeFilename(t('report.matchReport'))}.pdf`, doc.toBlob());
 }

@@ -9,13 +9,36 @@ import type { ClipFilter } from '../video/clips';
 import { computeMatchStats, emptyLine } from './compute';
 import { PlayerTable, RotationTable, TeamSummary, ZoneMap, type PlayerRow } from './StatsTables';
 import { GeneralStatsTable } from '../reports/GeneralStatsTable';
+import { RadarChart } from './RadarChart';
+import { radarValues } from './radar';
+import { ownSide, sideColors } from './teamColors';
+
+const PICK_KEY = 'svidia.statsTeam';
+function readPick(): 'own' | 'rival' {
+  try {
+    return localStorage.getItem(PICK_KEY) === 'rival' ? 'rival' : 'own';
+  } catch {
+    return 'own';
+  }
+}
 
 export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (f: Partial<ClipFilter>) => void }) {
   const { t } = useTranslation();
   const club = useCurrentClub();
   const match = m.match!;
   const [set, setSet] = useState<number | null>(null);
-  const [side, setSide] = useState<Side>(match.home.is_own || !match.away.is_own ? 'H' : 'A');
+  const ours = ownSide(match.home, match.away);
+  const [pick, setPick] = useState<'own' | 'rival'>(readPick);
+  const side: Side = pick === 'own' ? ours : ours === 'H' ? 'A' : 'H';
+  const otherSide: Side = side === 'H' ? 'A' : 'H';
+  function choose(p: 'own' | 'rival') {
+    setPick(p);
+    try {
+      localStorage.setItem(PICK_KEY, p);
+    } catch {
+      /* sense emmagatzematge */
+    }
+  }
 
   const setters = useMemo(
     () => ({
@@ -28,10 +51,9 @@ export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (
   const sets = m.state?.sets ?? [];
 
   const names: Record<SideCode, string> = { H: match.home.name, A: match.away.name };
-  const colors: Record<SideCode, string> = {
-    H: match.home.color ?? (match.home.is_own ? club.primary_color : '#5b6575'),
-    A: match.away.color ?? (match.away.is_own ? club.primary_color : '#5b6575'),
-  };
+  const colors: Record<SideCode, string> = sideColors(match.home, match.away, club.primary_color);
+  const setsPlayed = set == null ? sets.filter((s) => s.home + s.away > 0).length : 1;
+  const radar = [side, otherSide].map((s) => ({ name: names[s], color: colors[s], values: radarValues(stats.teams[s], setsPlayed) }));
 
   const rows: PlayerRow[] = useMemo(() => {
     const roster = m.players.filter((p) => p.side === side);
@@ -56,7 +78,15 @@ export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (
 
   return (
     <div className="stack match-stats">
-      <div className="row wrap">
+      <div className="row wrap between">
+        <div className="segmented" role="tablist" aria-label={t('stats.teamPick')}>
+          <button className={pick === 'own' ? 'on' : ''} onClick={() => choose('own')}>
+            {t('stats.ourTeam')} <span className="small muted">· {names[ours]}</span>
+          </button>
+          <button className={pick === 'rival' ? 'on' : ''} onClick={() => choose('rival')}>
+            {t('stats.rival')} <span className="small muted">· {names[ours === 'H' ? 'A' : 'H']}</span>
+          </button>
+        </div>
         <div className="segmented">
           <button className={set == null ? 'on' : ''} onClick={() => setSet(null)}>
             {t('stats.allMatch')}
@@ -71,22 +101,18 @@ export function MatchStatsView({ m, onShowClips }: { m: UseMatch; onShowClips: (
       </div>
 
       <div className="grid-2 summaries">
-        {(['H', 'A'] as Side[]).map((s) => (
-          <TeamSummary key={s} name={names[s]} team={stats.teams[s]} color={colors[s]} sets={setScore(s)} />
-        ))}
+        <TeamSummary name={names[side]} team={stats.teams[side]} color={colors[side]} sets={`${setScore(side)} – ${setScore(otherSide)}`} />
+        <section className="card stack">
+          <h2>{t('radar.title')}</h2>
+          <RadarChart series={radar} />
+          <p className="small muted">{t('radar.help')}</p>
+        </section>
       </div>
 
       <section className="card stack">
-        <div className="row between wrap">
-          <h2>{t('stats.players')}</h2>
-          <div className="segmented">
-            {(['H', 'A'] as Side[]).map((s) => (
-              <button key={s} className={side === s ? 'on' : ''} onClick={() => setSide(s)}>
-                {names[s]}
-              </button>
-            ))}
-          </div>
-        </div>
+        <h2>
+          {t('stats.players')} · {names[side]}
+        </h2>
         <PlayerTable
           rows={rows}
           total={{ key: 'total', number: null, name: t('stats.teamTotal'), line: stats.teams[side] }}

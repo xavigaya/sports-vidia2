@@ -20,7 +20,7 @@ type Tab = 'live' | 'roster' | 'stats';
 export function MatchPage() {
   const { matchId } = useParams<{ matchId: string }>();
   const m = useMatch(matchId!);
-  const { canEdit } = useClub();
+  const { canEdit, club } = useClub();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -80,7 +80,7 @@ export function MatchPage() {
             label={`⤒ ${t('report.pdf')}`}
             disabled={m.events.length === 0}
             items={[
-              { label: t('report.matchReport'), onSelect: () => void exportMatchReportPdf(m, t).catch((e: Error) => m.setError(e.message)) },
+              { label: t('report.matchReport'), onSelect: () => void exportMatchReportPdf(m, t, club?.primary_color).catch((e: Error) => m.setError(e.message)) },
               { label: t('report.general'), onSelect: () => void exportMatchGeneralPdf(m, t).catch((e: Error) => m.setError(e.message)) },
             ]}
           />

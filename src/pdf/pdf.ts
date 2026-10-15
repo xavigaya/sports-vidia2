@@ -129,6 +129,19 @@ export class PdfPage {
     this.ops.push(`q ${style}${n(x)} ${n(this.Y(y + h))} ${n(w)} ${n(h)} re ${paint} Q`);
   }
 
+  // Polígon tancat; fillOpacity (0..1) per a emplenats translúcids
+  polygon(points: { x: number; y: number }[], o: ShapeOptions & { fillOpacity?: number } = {}) {
+    if (points.length < 2) return;
+    const stroke = o.stroke === undefined ? '#000000' : o.stroke;
+    const fill = o.fill ?? null;
+    const path = points.map((p, i) => `${n(p.x)} ${n(this.Y(p.y))} ${i === 0 ? 'm' : 'l'}`).join(' ') + ' h';
+    if (fill) {
+      const alpha = o.fillOpacity != null ? Math.max(1, Math.min(10, Math.round(o.fillOpacity * 10))) : 10;
+      this.ops.push(`q ${alpha < 10 ? `/A${alpha} gs ` : ''}${rgb(fill)} rg ${path} f Q`);
+    }
+    if (stroke) this.ops.push(`q ${rgb(stroke)} RG ${n(o.width ?? 0.5)} w 1 j ${path} S Q`);
+  }
+
   circle(cx: number, cy: number, r: number, o: ShapeOptions = {}) {
     const stroke = o.stroke === undefined ? '#000000' : o.stroke;
     const fill = o.fill ?? null;
@@ -148,6 +161,9 @@ export class PdfPage {
     this.ops.push(`q ${style}${path} ${paint} Q`);
   }
 }
+
+// Nivells de transparència disponibles (/A1 = 10% … /A9 = 90%)
+const ALPHAS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => `/A${i} << /ca ${i / 10} >>`).join(' ');
 
 // ---------------------------------------------------------------------
 // Document
@@ -177,7 +193,7 @@ export class PdfDocument {
       kids.push(
         add(
           `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${n(p.width)} ${n(p.height)}] ` +
-            `/Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${c} 0 R >>`,
+            `/Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> /ExtGState << ${ALPHAS} >> >> /Contents ${c} 0 R >>`,
         ),
       );
     }
